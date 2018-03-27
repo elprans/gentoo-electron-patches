@@ -1,0 +1,36 @@
+From 346cf8d276ae05f9429fcfe031af7a367f715a27 Mon Sep 17 00:00:00 2001
+From: Elvis Pranskevichus <elvis@magic.io>
+Date: Sat, 24 Mar 2018 15:29:09 -0400
+Subject: [PATCH 09/12] Remove _FORTIFY_SOURCE definition
+
+---
+ build/config/compiler/BUILD.gn | 13 -------------
+ 1 file changed, 13 deletions(-)
+
+diff --git a/build/config/compiler/BUILD.gn b/build/config/compiler/BUILD.gn
+index 5f7a796544..d4ab3c97b2 100644
+--- a/build/config/compiler/BUILD.gn
++++ b/build/config/compiler/BUILD.gn
+@@ -1158,19 +1158,6 @@ config("chromium_code") {
+       "__STDC_FORMAT_MACROS",
+     ]
+ 
+-    if (!is_debug && !using_sanitizer &&
+-        (!is_linux || !is_clang || is_official_build)) {
+-      # _FORTIFY_SOURCE isn't really supported by Clang now, see
+-      # http://llvm.org/bugs/show_bug.cgi?id=16821.
+-      # It seems to work fine with Ubuntu 12 headers though, so use it in
+-      # official builds.
+-      #
+-      # Non-chromium code is not guaranteed to compile cleanly with
+-      # _FORTIFY_SOURCE. Also, fortified build may fail when optimizations are
+-      # disabled, so only do that for Release build.
+-      defines += [ "_FORTIFY_SOURCE=2" ]
+-    }
+-
+     if (is_mac || is_ios) {
+       cflags_objc = [ "-Wobjc-missing-property-synthesis" ]
+       cflags_objcc = [ "-Wobjc-missing-property-synthesis" ]
+-- 
+2.16.1
+

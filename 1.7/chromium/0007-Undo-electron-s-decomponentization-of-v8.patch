@@ -1,0 +1,31 @@
+From 0264aa9cd5b6162d040bb64cf8c6346bb5231314 Mon Sep 17 00:00:00 2001
+From: Elvis Pranskevichus <elvis@magic.io>
+Date: Sat, 24 Mar 2018 15:22:54 -0400
+Subject: [PATCH 07/12] Undo electron's decomponentization of v8
+
+---
+ v8/gni/v8.gni | 8 +-------
+ 1 file changed, 1 insertion(+), 7 deletions(-)
+
+diff --git a/v8/gni/v8.gni b/v8/gni/v8.gni
+index 1b521f83c9..67e2c39753 100644
+--- a/v8/gni/v8.gni
++++ b/v8/gni/v8.gni
+@@ -144,13 +144,7 @@ template("v8_executable") {
+ }
+ 
+ template("v8_component") {
+-  if (is_electron_build && !is_component_build &&
+-      (target_name == "v8_libbase" || target_name == "v8_libplatform")) {
+-    v8_component = "source_set"
+-  } else {
+-    v8_component = component_electron
+-  }
+-  target(v8_component, target_name) {
++  component(target_name) {
+     forward_variables_from(invoker, "*", [ "configs" ])
+     configs += invoker.configs
+     configs -= v8_remove_configs
+-- 
+2.16.1
+

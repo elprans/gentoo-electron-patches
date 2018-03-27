@@ -1,0 +1,25 @@
+From 4c8c2811d45cdebb49919c40749d5fea0394a50a Mon Sep 17 00:00:00 2001
+From: Elvis Pranskevichus <elvis@magic.io>
+Date: Sat, 24 Mar 2018 18:17:59 -0400
+Subject: [PATCH 11/12] Remove GardinerMod fonts
+
+---
+ content/shell/test_runner/BUILD.gn | 2 --
+ 1 file changed, 2 deletions(-)
+
+diff --git a/content/shell/test_runner/BUILD.gn b/content/shell/test_runner/BUILD.gn
+index 974d8b1b85..7bd6f0cd00 100644
+--- a/content/shell/test_runner/BUILD.gn
++++ b/content/shell/test_runner/BUILD.gn
+@@ -157,8 +157,6 @@ if (use_x11) {
+   copy("copy_x11_fonts") {
+     visibility = [ ":*" ]
+     sources = [
+-      "//third_party/gardiner_mod/GardinerModBug.ttf",
+-      "//third_party/gardiner_mod/GardinerModCat.ttf",
+       "resources/fonts/fonts.conf",
+     ]
+     outputs = [
+-- 
+2.16.1
+

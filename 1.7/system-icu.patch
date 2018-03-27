@@ -1,0 +1,48 @@
+From 957f1b42c3249d2f359bedddc89daa3ae922736e Mon Sep 17 00:00:00 2001
+From: Elvis Pranskevichus <elvis@magic.io>
+Date: Sun, 29 Oct 2017 16:38:40 -0400
+Subject: [PATCH] system-icu support
+
+---
+ brightray/brightray.gyp | 2 ++
+ electron.gyp            | 4 +++-
+ 2 files changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/brightray/brightray.gyp b/brightray/brightray.gyp
+index 32e3dfeb9..7fc04e8eb 100644
+--- a/brightray/brightray.gyp
++++ b/brightray/brightray.gyp
+@@ -158,6 +158,8 @@
+                   '-lvpx',
+                   '-lFLAC',
+                   '-lminizip',
++                  '-licui18n',
++                  '-licuuc',
+                 ],
+               },
+             }],
+diff --git a/electron.gyp b/electron.gyp
+index b29918a84..b8b15f6d0 100644
+--- a/electron.gyp
++++ b/electron.gyp
+@@ -206,7 +206,6 @@
+               'files': [
+                 '<@(copied_libraries)',
+                 '<(libchromiumcontent_dir)/locales',
+-                '<(libchromiumcontent_dir)/icudtl.dat',
+                 '<(libchromiumcontent_dir)/blink_image_resources_200_percent.pak',
+                 '<(libchromiumcontent_dir)/content_resources_200_percent.pak',
+                 '<(libchromiumcontent_dir)/content_shell.pak',
+@@ -252,6 +251,9 @@
+         'chromium_src',
+         '.',
+         'vendor/native_mate',
++        # libicu headers shim.
++        '<(SHARED_INTERMEDIATE_DIR)/shim_headers/icui18n_shim',
++        '<(SHARED_INTERMEDIATE_DIR)/shim_headers/icuuc_shim',
+         # Include atom_natives.h.
+         '<(SHARED_INTERMEDIATE_DIR)',
+         # Include directories for uv and node.
+-- 
+2.16.1
+
