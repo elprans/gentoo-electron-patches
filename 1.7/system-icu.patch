@@ -1,26 +1,12 @@
-From 957f1b42c3249d2f359bedddc89daa3ae922736e Mon Sep 17 00:00:00 2001
+From e264c3d063bbf3aad0162328f0f22f714fd6ac69 Mon Sep 17 00:00:00 2001
 From: Elvis Pranskevichus <elvis@magic.io>
 Date: Sun, 29 Oct 2017 16:38:40 -0400
 Subject: [PATCH] system-icu support
 
 ---
- brightray/brightray.gyp | 2 ++
- electron.gyp            | 4 +++-
- 2 files changed, 5 insertions(+), 1 deletion(-)
+ electron.gyp | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/brightray/brightray.gyp b/brightray/brightray.gyp
-index 32e3dfeb9..7fc04e8eb 100644
---- a/brightray/brightray.gyp
-+++ b/brightray/brightray.gyp
-@@ -158,6 +158,8 @@
-                   '-lvpx',
-                   '-lFLAC',
-                   '-lminizip',
-+                  '-licui18n',
-+                  '-licuuc',
-                 ],
-               },
-             }],
 diff --git a/electron.gyp b/electron.gyp
 index b29918a84..b8b15f6d0 100644
 --- a/electron.gyp

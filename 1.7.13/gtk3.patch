@@ -1,0 +1,215 @@
+From 7b030c4d4c30d688bf4fed7663a91dc5577d8a99 Mon Sep 17 00:00:00 2001
+From: Elvis Pranskevichus <elvis@magic.io>
+Date: Wed, 28 Mar 2018 11:30:51 -0400
+Subject: [PATCH] GTK3 compatibility
+
+---
+ atom/browser/ui/file_dialog_gtk.cc | 10 +++--
+ atom/browser/ui/message_box_gtk.cc | 12 +++---
+ atom/browser/ui/views/menu_bar.cc  | 76 +++++++++++++++++++++++++++++++++++++-
+ brightray/brightray.gyp            | 10 ++++-
+ 4 files changed, 97 insertions(+), 11 deletions(-)
+
+diff --git a/atom/browser/ui/file_dialog_gtk.cc b/atom/browser/ui/file_dialog_gtk.cc
+index 44a9017ab..d21e14243 100644
+--- a/atom/browser/ui/file_dialog_gtk.cc
++++ b/atom/browser/ui/file_dialog_gtk.cc
+@@ -2,6 +2,8 @@
+ // Use of this source code is governed by the MIT license that can be
+ // found in the LICENSE file.
+ 
++#include <glib/gi18n.h>
++
+ #include "atom/browser/ui/file_dialog.h"
+ 
+ #include "atom/browser/native_window_views.h"
+@@ -39,20 +41,20 @@ class FileChooserDialog {
+                     const DialogSettings& settings)
+       : parent_(static_cast<atom::NativeWindowViews*>(settings.parent_window)),
+         filters_(settings.filters) {
+-    const char* confirm_text = GTK_STOCK_OK;
++    const char* confirm_text = _("_OK");
+ 
+     if (!settings.button_label.empty())
+       confirm_text = settings.button_label.c_str();
+     else if (action == GTK_FILE_CHOOSER_ACTION_SAVE)
+-      confirm_text = GTK_STOCK_SAVE;
++      confirm_text = _("_Save");
+     else if (action == GTK_FILE_CHOOSER_ACTION_OPEN)
+-      confirm_text = GTK_STOCK_OPEN;
++      confirm_text = _("_Open");
+ 
+     dialog_ = gtk_file_chooser_dialog_new(
+         settings.title.c_str(),
+         NULL,
+         action,
+-        GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
++         _("_Cancel"), GTK_RESPONSE_CANCEL,
+         confirm_text, GTK_RESPONSE_ACCEPT,
+         NULL);
+     if (parent_) {
+diff --git a/atom/browser/ui/message_box_gtk.cc b/atom/browser/ui/message_box_gtk.cc
+index ffaa0a76c..19effce38 100644
+--- a/atom/browser/ui/message_box_gtk.cc
++++ b/atom/browser/ui/message_box_gtk.cc
+@@ -2,6 +2,8 @@
+ // Use of this source code is governed by the MIT license that can be
+ // found in the LICENSE file.
+ 
++#include <glib/gi18n.h>
++
+ #include "atom/browser/ui/message_box.h"
+ 
+ #include "atom/browser/browser.h"
+@@ -126,13 +128,13 @@ class GtkMessageBox : public NativeWindowObserver {
+   const char* TranslateToStock(int id, const std::string& text) {
+     std::string lower = base::ToLowerASCII(text);
+     if (lower == "cancel")
+-      return GTK_STOCK_CANCEL;
++      return _("_Cancel");
+     else if (lower == "no")
+-      return GTK_STOCK_NO;
++      return _("_No");
+     else if (lower == "ok")
+-      return GTK_STOCK_OK;
++      return _("_OK");
+     else if (lower == "yes")
+-      return GTK_STOCK_YES;
++      return _("_Yes");
+     else
+       return text.c_str();
+   }
+@@ -197,7 +199,7 @@ void GtkMessageBox::OnResponseDialog(GtkWidget* widget, int response) {
+ }
+ 
+ void GtkMessageBox::OnCheckboxToggled(GtkWidget* widget) {
+-  checkbox_checked_ = GTK_TOGGLE_BUTTON(widget)->active;
++  checkbox_checked_ = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(widget));
+ }
+ 
+ }  // namespace
+diff --git a/atom/browser/ui/views/menu_bar.cc b/atom/browser/ui/views/menu_bar.cc
+index e403b0737..31abb9f93 100644
+--- a/atom/browser/ui/views/menu_bar.cc
++++ b/atom/browser/ui/views/menu_bar.cc
+@@ -16,7 +16,7 @@
+ 
+ #if defined(OS_WIN)
+ #include "ui/gfx/color_utils.h"
+-#elif defined(USE_X11)
++#elif defined(USE_X11) && GTK_MAJOR_VERSION < 3
+ #include "chrome/browser/ui/libgtkui/skia_utils_gtk.h"
+ #endif
+ 
+@@ -30,6 +30,9 @@ const char kViewClassName[] = "ElectronMenuBar";
+ const SkColor kDefaultColor = SkColorSetARGB(255, 233, 233, 233);
+ 
+ #if defined(USE_X11)
++
++#if GTK_MAJOR_VERSION < 3
++
+ void GetMenuBarColor(SkColor* enabled, SkColor* disabled, SkColor* highlight,
+                      SkColor* hover, SkColor* background) {
+   GtkWidget* menu_bar = gtk_menu_bar_new();
+@@ -43,6 +46,77 @@ void GetMenuBarColor(SkColor* enabled, SkColor* disabled, SkColor* highlight,
+ 
+   gtk_widget_destroy(menu_bar);
+ }
++
++#else // GTK_MAJOR_VERSION >= 3
++
++SkColor GdkRGBAToSkColor(GdkRGBA color) {
++  return SkColorSetARGB(round(color.alpha * 255),
++                        round(color.red * 255),
++                        round(color.green * 255),
++                        round(color.blue * 255));
++}
++
++void GetMenuBarColor(SkColor* enabled, SkColor* disabled, SkColor* highlight,
++                     SkColor* hover, SkColor* background) {
++  GtkWidget* window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
++  GtkWidget* menu_bar = gtk_menu_bar_new();
++
++  GtkWidget* menu_item = gtk_menu_item_new_with_label("");
++  GtkWidget* label = gtk_bin_get_child(GTK_BIN(menu_item));
++  GtkStyleContext* window_style_ctx = gtk_widget_get_style_context(window);
++  GtkStyleContext* menu_bar_style_ctx =
++    gtk_widget_get_style_context(menu_bar);
++  GtkStyleContext* menu_item_style_ctx =
++    gtk_widget_get_style_context(menu_item);
++  GtkStyleContext* label_style_ctx = gtk_widget_get_style_context(label);
++  GdkRGBA normal_color;
++  GdkRGBA backdrop_color;
++  GdkRGBA prelight_color;
++  GdkRGBA* background_color_ptr;
++
++  gtk_container_add(GTK_CONTAINER(window), menu_bar);
++  gtk_menu_shell_append(GTK_MENU_SHELL(menu_bar), menu_item);
++
++  gtk_style_context_get(menu_bar_style_ctx,
++                        GTK_STATE_FLAG_NORMAL,
++                        "background-color",
++                        &background_color_ptr,
++                        NULL);
++
++  if (background_color_ptr->alpha == 0.0)
++    gtk_style_context_get(window_style_ctx,
++                          GTK_STATE_FLAG_NORMAL,
++                          "background-color",
++                          &background_color_ptr,
++                          NULL);
++
++  *background = GdkRGBAToSkColor(*background_color_ptr);
++  gdk_rgba_free(background_color_ptr);
++
++  gtk_style_context_get_color(label_style_ctx,
++                              GTK_STATE_FLAG_NORMAL,
++                              &normal_color);
++  *enabled = GdkRGBAToSkColor(normal_color);
++  *hover = GdkRGBAToSkColor(normal_color);
++
++  gtk_style_context_set_state(menu_item_style_ctx, GTK_STATE_FLAG_PRELIGHT);
++  gtk_style_context_get_color(label_style_ctx,
++                              GTK_STATE_FLAG_NORMAL,
++                              &prelight_color);
++  gtk_style_context_set_state(menu_item_style_ctx, GTK_STATE_FLAG_NORMAL);
++  *highlight = GdkRGBAToSkColor(prelight_color);
++
++
++  gtk_style_context_get_color(label_style_ctx,
++                              GTK_STATE_FLAG_BACKDROP,
++                              &backdrop_color);
++  *disabled = GdkRGBAToSkColor(backdrop_color);
++
++  gtk_widget_destroy(menu_item);
++  gtk_widget_destroy(menu_bar);
++  gtk_widget_destroy(window);
++}
++#endif
+ #endif
+ 
+ }  // namespace
+diff --git a/brightray/brightray.gyp b/brightray/brightray.gyp
+index 1542ab0b9..488e8de15 100644
+--- a/brightray/brightray.gyp
++++ b/brightray/brightray.gyp
+@@ -1,7 +1,15 @@
+ {
+   'variables': {
+     # The libraries brightray will be compiled to.
+-    'linux_system_libraries': 'gtk+-2.0 dbus-1 x11 x11-xcb xcb xi xcursor xdamage xrandr xcomposite xext xfixes xrender xtst xscrnsaver gmodule-2.0 nss'
++    'linux_system_libraries': 'dbus-1 x11 x11-xcb xcb xi xcursor xdamage xrandr xcomposite xext xfixes xrender xtst xscrnsaver gmodule-2.0 nss',
++    'conditions': [
++      ['use_gtk3==1', {
++        'linux_system_libraries': '<(linux_system_libraries) gtk+-3.0',
++      }],
++      ['use_gtk3==0', {
++        'linux_system_libraries': '<(linux_system_libraries) gtk+-2.0',
++      }],
++    ],
+   },
+   'includes': [
+     'filenames.gypi',
+-- 
+2.16.1
+
