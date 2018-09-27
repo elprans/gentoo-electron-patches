@@ -1,7 +1,7 @@
-From 65df6970c04c3d4956252c61dd5900e138753526 Mon Sep 17 00:00:00 2001
+From 7998fd0238460fd4b8857e5a0c4cc066db4a979e Mon Sep 17 00:00:00 2001
 From: Elvis Pranskevichus <elvis@magic.io>
 Date: Sat, 24 Mar 2018 20:31:06 -0400
-Subject: [PATCH 12/13] system nodejs
+Subject: [PATCH 08/10] system nodejs
 
 ---
  third_party/node/node.py | 6 +-----

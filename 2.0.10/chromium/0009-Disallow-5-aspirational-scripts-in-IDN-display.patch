@@ -1,7 +1,7 @@
-From 535345426e89ce72bdf4b83599ac0347451e2b98 Mon Sep 17 00:00:00 2001
+From 2373f331d8348fdd5b90df6022fa91a703349c82 Mon Sep 17 00:00:00 2001
 From: Jungshik Shin <jshin@chromium.org>
 Date: Mon, 4 Dec 2017 09:42:01 -0500
-Subject: [PATCH 02/13] Disallow 5 aspirational scripts in IDN display
+Subject: [PATCH 09/10] Disallow 5 aspirational scripts in IDN display
 
 UTS 31 (http://www.unicode.org/reports/tr31/#Aspirational_Use_Scripts )
 used to list 5 scripts in Table 6 as 'aspirational scripts', but it
@@ -14,27 +14,27 @@ scripts in IDN display a while ago.
 
 This is also necessary for updating ICU to version 60.
 ---
- components/url_formatter/url_formatter.cc | 33 -----------------------
+ components/url_formatter/idn_spoof_checker.cc | 33 -------------------
  1 file changed, 33 deletions(-)
 
-diff --git a/components/url_formatter/url_formatter.cc b/components/url_formatter/url_formatter.cc
-index 3d5740fd37..dc00b9261f 100644
---- a/components/url_formatter/url_formatter.cc
-+++ b/components/url_formatter/url_formatter.cc
-@@ -471,39 +471,6 @@ void IDNSpoofChecker::SetAllowedUnicodeSet(UErrorCode* status) {
+diff --git a/components/url_formatter/idn_spoof_checker.cc b/components/url_formatter/idn_spoof_checker.cc
+index 1c4d9bdb74..89538c3b7b 100644
+--- a/components/url_formatter/idn_spoof_checker.cc
++++ b/components/url_formatter/idn_spoof_checker.cc
+@@ -328,39 +328,6 @@ void IDNSpoofChecker::SetAllowedUnicodeSet(UErrorCode* status) {
    const icu::UnicodeSet* inclusion_set = uspoof_getInclusionUnicodeSet(status);
    allowed_set.addAll(*inclusion_set);
  
--  // Five aspirational scripts are taken from UTR 31 Table 6 at
--  // http://www.unicode.org/reports/tr31/#Aspirational_Use_Scripts .
--  // Not all the characters of aspirational scripts are suitable for
--  // identifiers. Therefore, only characters belonging to
--  // [:Identifier_Type=Aspirational:] (listed in 'Status/Type=Aspirational'
--  // section at
--  // http://www.unicode.org/Public/security/latest/xidmodifications.txt) are
--  // are added to the allowed set. The list has to be updated when a new
--  // version of Unicode is released. The current version is 9.0.0 and ICU 60
--  // will have Unicode 10.0 data.
+-// Five aspirational scripts are taken from UTR 31 Table 6 at
+-// http://www.unicode.org/reports/tr31/#Aspirational_Use_Scripts .
+-// Not all the characters of aspirational scripts are suitable for
+-// identifiers. Therefore, only characters belonging to
+-// [:Identifier_Type=Aspirational:] (listed in 'Status/Type=Aspirational'
+-// section at
+-// http://www.unicode.org/Public/security/latest/xidmodifications.txt) are
+-// are added to the allowed set. The list has to be updated when a new
+-// version of Unicode is released. The current version is 9.0.0 and ICU 60
+-// will have Unicode 10.0 data.
 -#if U_ICU_VERSION_MAJOR_NUM < 60
 -  const icu::UnicodeSet aspirational_scripts(
 -      icu::UnicodeString(
@@ -58,9 +58,9 @@ index 3d5740fd37..dc00b9261f 100644
 -#error "Update aspirational_scripts per Unicode 10.0"
 -#endif
 -
-   // U+0338 is included in the recommended set, while U+05F4 and U+2027 are in
-   // the inclusion set. However, they are blacklisted as a part of Mozilla's
-   // IDN blacklist (http://kb.mozillazine.org/Network.IDN.blacklist_chars).
+   // The sections below refer to Mozilla's IDN blacklist:
+   // http://kb.mozillazine.org/Network.IDN.blacklist_chars
+   //
 -- 
 2.19.0
 

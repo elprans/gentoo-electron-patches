@@ -1,7 +1,7 @@
-From 4c0adab7d3c1b709b5f0639dd3a0b25b36a8b1f3 Mon Sep 17 00:00:00 2001
+From 2011be86166dfad4801fc12cd997d198b824460f Mon Sep 17 00:00:00 2001
 From: floppymaster <floppymaster@gmail.com>
 Date: Mon, 12 Jun 2017 09:44:54 -0700
-Subject: [PATCH 03/12] ICU unbundling fixes
+Subject: [PATCH 03/13] ICU unbundling fixes
 
 Update instructions to generate ICU header lists
 Update header list for unbundling ICU 59
@@ -136,5 +136,5 @@ index f3734b7a01..5bdd91555d 100644
      "unicode/uloc.h",
      "unicode/umachine.h",
 -- 
-2.16.1
+2.19.0
 

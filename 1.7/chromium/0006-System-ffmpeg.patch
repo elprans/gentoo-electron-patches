@@ -1,7 +1,7 @@
-From 43de71fb88a9055a7a28eeca51160db6679b0aaf Mon Sep 17 00:00:00 2001
+From 0e0c127120db76a6fdbf1f761d84b188a0a1a834 Mon Sep 17 00:00:00 2001
 From: Elvis Pranskevichus <elvis@magic.io>
 Date: Sat, 24 Mar 2018 15:19:44 -0400
-Subject: [PATCH 06/12] System ffmpeg
+Subject: [PATCH 06/13] System ffmpeg
 
 ---
  media/ffmpeg/ffmpeg_common.h    |  5 -----
@@ -61,5 +61,5 @@ index d329492be4..1bbd1f2938 100644
    std::unique_ptr<MediaTracks> media_tracks(new MediaTracks());
  
 -- 
-2.16.1
+2.19.0
 

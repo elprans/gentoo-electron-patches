@@ -1,0 +1,196 @@
+From 3239d38cd1c3d7e5a8362eff372aca7c861d2af0 Mon Sep 17 00:00:00 2001
+From: Elvis Pranskevichus <elvis@magic.io>
+Date: Fri, 28 Apr 2017 17:22:38 -0400
+Subject: [PATCH] Gentoo build fixes
+
+---
+ chromiumcontent/BUILD.gn      | 24 ++----------------------
+ chromiumcontent/build_libs.py |  5 ++---
+ script/create-dist            | 18 +++++++++---------
+ script/lib/config.py          |  2 +-
+ 4 files changed, 14 insertions(+), 35 deletions(-)
+
+diff --git a/chromiumcontent/BUILD.gn b/chromiumcontent/BUILD.gn
+index 9871197..04ccca9 100644
+--- a/chromiumcontent/BUILD.gn
++++ b/chromiumcontent/BUILD.gn
+@@ -208,6 +208,7 @@ if (is_electron_build && !is_component_build) {
+     script = "build_libs.py"
+     args = [ "-o", rebase_path("$target_out_dir/objects.gni"),
+              "-s", rebase_path(outputs[0]),
++             "-b", rebase_path(root_build_dir),
+              "-t", target_cpu ]
+ 
+     deps = [ ":targets" ]
+@@ -235,8 +236,7 @@ if (is_electron_build && !is_component_build) {
+       ":webkitbindings",
+       ":webkitmodules",
+       ":webrtc",
+-      ":v8",
+-      ":v8base",
++      "//v8:v8",
+     ]
+   }
+ 
+@@ -368,26 +368,6 @@ if (is_electron_build && !is_component_build) {
+     }
+   }
+ 
+-  static_library("v8") {
+-    complete_static_lib = true
+-    sources = []
+-    if (defined(obj_v8)) {
+-      sources += obj_v8
+-    }
+-  }
+-
+-  split_static_library("v8base") {
+-    complete_static_lib = true
+-    split_count = 1
+-    sources = []
+-    if (defined(obj_v8base)) {
+-      sources += obj_v8base
+-      if (is_win) {
+-        split_count = 2
+-      }
+-    }
+-  }
+-
+ } else {
+ 
+   group("chromiumcontent") {
+diff --git a/chromiumcontent/build_libs.py b/chromiumcontent/build_libs.py
+index 15a871c..1341a8a 100644
+--- a/chromiumcontent/build_libs.py
++++ b/chromiumcontent/build_libs.py
+@@ -7,6 +7,7 @@ parser = argparse.ArgumentParser()
+ parser.add_argument('-o', dest='out')
+ parser.add_argument('-s', dest='stamp')
+ parser.add_argument('-t', dest='target_cpu')
++parser.add_argument('-b', dest='root_build_dir')
+ args = parser.parse_args()
+ 
+ def gen_list(out, name, obj_dirs):
+@@ -90,7 +91,7 @@ with open(args.out, 'w') as out:
+             "third_party/usrsctp",
+             "third_party/woff2",
+             "third_party/zlib",
+-            "tools",
++            "tools/battor_agent",
+             "ui",
+             "url",
+         ] + additional_libchromiumcontent)
+@@ -325,5 +326,3 @@ with open(args.out, 'w') as out:
+         [
+             "v8/v8_base",
+         ])
+-
+-open(args.stamp, 'w')
+diff --git a/script/create-dist b/script/create-dist
+index 593ac3b..fcb8327 100755
+--- a/script/create-dist
++++ b/script/create-dist
+@@ -34,7 +34,7 @@ MIPS64EL_GCC = 'gcc-4.8.3-d197-n64-loongson'
+ # Whether the host system is a mips64el machine.
+ IS_MIPS64EL_HOST = platform.uname()[5] == 'mips64'
+ 
+-NINJA = os.path.join(VENDOR_DIR, 'depot_tools', 'ninja')
++NINJA = '/usr/bin/ninja'
+ if sys.platform == 'win32':
+   NINJA = '{0}.exe'.format(NINJA)
+ elif IS_MIPS64EL_HOST:
+@@ -65,7 +65,6 @@ COMPONENTS = ['static_library', 'shared_library', 'native_mksnapshot']
+ BINARIES = {
+   'all': [
+     'content_shell.pak',
+-    'icudtl.dat',
+     'natives_blob.bin',
+     'snapshot_blob.bin',
+     os.path.join('gen', 'blink', 'public', 'resources', 'blink_image_resources_200_percent.pak'),
+@@ -79,7 +78,6 @@ BINARIES = {
+     'libffmpeg.dylib',
+   ],
+   'linux': [
+-    'libffmpeg.so',
+   ],
+   'win32': [
+     'd3dcompiler_47.dll',
+@@ -409,13 +407,10 @@ def generate_ninja(args, ninja):
+     if ((args.component == 'all' or args.component == component) and
+         (component != 'native_mksnapshot' or 'arm' in target_arch)):
+       copy_binaries(target_arch, component, create_debug_archive,
+-                    args.keep_debug_symbols, ninja)
++                    args.keep_debug_symbols, ninja, args.system_icu)
+       copy_generated_sources(target_arch, component, ninja)
+       copy_locales(target_arch, component, ninja)
+ 
+-  if args.component != 'native_mksnapshot':
+-    copy_ffmpeg(target_arch, ninja)
+-    copy_sources(ninja)
+   generate_licenses(ninja)
+ 
+ 
+@@ -438,6 +433,8 @@ def parse_args():
+                       help='static_library or shared_library or all')
+   parser.add_argument('--no_zip', action='store_true',
+                       help='Do not create distribution archive')
++  parser.add_argument('--system-icu', action='store_true', dest='system_icu',
++                      help='Use system icu.')
+   return parser.parse_args()
+ 
+ 
+@@ -470,7 +467,7 @@ def copy_with_blacklist(target_arch, src, dest, ninja):
+ 
+ 
+ def copy_binaries(target_arch, component, create_debug_archive,
+-                  keep_debug_symbols, ninja):
++                  keep_debug_symbols, ninja, system_icu):
+   output_dir = get_output_dir(SOURCE_ROOT, target_arch, component)
+   target_dir = component
+ 
+@@ -480,6 +477,8 @@ def copy_binaries(target_arch, component, create_debug_archive,
+     return
+ 
+   binaries = BINARIES['all'] + BINARIES[TARGET_PLATFORM]
++  if not system_icu:
++    binaries.append('icudtl.dat')
+   if component == 'shared_library':
+     binaries += BINARIES_SHARED_LIBRARY[TARGET_PLATFORM]
+   for binary in binaries:
+@@ -591,6 +590,7 @@ def copy_locales(target_arch, component, ninja):
+     new_name = re.sub('content_strings_', '', filename)
+     ninja.copy(src_file, os.path.join(target_dir, new_name), False)
+ 
++
+ def copy_sources(ninja):
+   for include_path in INCLUDE_DIRS:
+     copy_headers(include_path, relative_to=SRC_DIR, destination=DIST_SRC_DIR, ninja=ninja)
+@@ -616,7 +616,6 @@ def copy_ffmpeg(target_arch, ninja):
+   ninja.copy(os.path.join(output_dir, binary), target_dir)
+ 
+ 
+-
+ def copy_headers(relative_path, relative_to, destination, ninja):
+   abs_path = os.path.join(relative_to, relative_path)
+   for dirpath, dirnames, filenames in os.walk(abs_path):
+@@ -666,6 +665,7 @@ def link_binary_to_debug_file(objcopy, binfile, symfile, dirname, env):
+ def run_strip(target_arch, filename, create_debug_archive):
+   # Static libraries are not stripped because it would remove
+   # all the symbols in it.
++  return
+   if filename.endswith('.a'):
+     return
+ 
+diff --git a/script/lib/config.py b/script/lib/config.py
+index 3455161..195b2a1 100644
+--- a/script/lib/config.py
++++ b/script/lib/config.py
+@@ -4,4 +4,4 @@ import os
+ 
+ 
+ def get_output_dir(source_root, target_arch, component):
+-  return os.path.join(source_root, 'src', 'out-' + target_arch, component)
++  return os.environ.get('CHROMIUM_BUILD_DIR')
+-- 
+2.16.4
+

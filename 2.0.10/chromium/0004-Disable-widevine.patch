@@ -1,7 +1,7 @@
-From f0e580b7f099051a84f65a5a0fbf053b9270406b Mon Sep 17 00:00:00 2001
+From 7ac551abd3a0f3196006144eb8a4668ec8e1ce92 Mon Sep 17 00:00:00 2001
 From: Elvis Pranskevichus <elvis@magic.io>
 Date: Sat, 24 Mar 2018 15:28:18 -0400
-Subject: [PATCH 08/13] Disable widevine
+Subject: [PATCH 04/10] Disable widevine
 
 ---
  third_party/widevine/cdm/stub/widevine_cdm_version.h | 1 -

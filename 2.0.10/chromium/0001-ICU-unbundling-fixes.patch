@@ -1,0 +1,30 @@
+From 50e2c988006fb4e27d7d8d378632ca36bec538ee Mon Sep 17 00:00:00 2001
+From: floppymaster <floppymaster@gmail.com>
+Date: Mon, 12 Jun 2017 09:44:54 -0700
+Subject: [PATCH 01/10] ICU unbundling fixes
+
+Update instructions to generate ICU header lists
+Update header list for unbundling ICU 59
+
+Bug: https://bugs.gentoo.org/619796#c2
+Review-Url: https://codereview.chromium.org/2935603002
+Cr-Commit-Position: refs/heads/master@{#478662}
+---
+ build/linux/unbundle/icu.gn | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/build/linux/unbundle/icu.gn b/build/linux/unbundle/icu.gn
+index d830b3eeb5..5bdd91555d 100644
+--- a/build/linux/unbundle/icu.gn
++++ b/build/linux/unbundle/icu.gn
+@@ -16,6 +16,7 @@ config("icu_config") {
+   defines = [
+     "USING_SYSTEM_ICU=1",
+     "ICU_UTIL_DATA_IMPL=ICU_UTIL_DATA_STATIC",
++    "UCHAR_TYPE=uint16_t",
+   ]
+ }
+ 
+-- 
+2.19.0
+

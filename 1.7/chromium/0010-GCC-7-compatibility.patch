@@ -1,14 +1,14 @@
-From 04f5aa6d9cb8c2758f85a8d59c38c0c92589cf7f Mon Sep 17 00:00:00 2001
+From 5425679eaf8b2edc843945d8e9c19d844ea262fc Mon Sep 17 00:00:00 2001
 From: Elvis Pranskevichus <elvis@magic.io>
 Date: Thu, 7 Dec 2017 09:25:03 -0500
-Subject: [PATCH 10/12] GCC-7 compatibility
+Subject: [PATCH 10/13] GCC-7 compatibility
 
 ---
- .../Source/platform/graphics/gpu/SharedGpuContext.h  |  1 +
- third_party/WebKit/Source/wtf/LinkedHashSet.h        |  1 +
- v8/src/objects-body-descriptors.h                    |  2 +-
- v8/src/objects-inl.h                                 | 19 +++++++++++++++++++
- v8/src/objects.h                                     | 20 ++++----------------
+ .../platform/graphics/gpu/SharedGpuContext.h  |  1 +
+ third_party/WebKit/Source/wtf/LinkedHashSet.h |  1 +
+ v8/src/objects-body-descriptors.h             |  2 +-
+ v8/src/objects-inl.h                          | 19 ++++++++++++++++++
+ v8/src/objects.h                              | 20 ++++---------------
  5 files changed, 26 insertions(+), 17 deletions(-)
 
 diff --git a/third_party/WebKit/Source/platform/graphics/gpu/SharedGpuContext.h b/third_party/WebKit/Source/platform/graphics/gpu/SharedGpuContext.h
@@ -110,5 +110,5 @@ index 04d3d384d1..2c161c23f4 100644
    // Returns a new HashTable object.
    MUST_USE_RESULT static Handle<Derived> New(
 -- 
-2.16.1
+2.19.0
 

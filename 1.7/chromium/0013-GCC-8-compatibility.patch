@@ -1,0 +1,43 @@
+From 77d90cc8a13d95e8982914113bbf2dc30d97c6d3 Mon Sep 17 00:00:00 2001
+From: Elvis Pranskevichus <elvis@magic.io>
+Date: Fri, 28 Sep 2018 10:17:54 -0400
+Subject: [PATCH 13/13] GCC-8 compatibility
+
+---
+ third_party/webrtc/common_audio/vad/vad_core.c                | 4 ++--
+ .../modules/audio_coding/codecs/isac/fix/source/lattice.c     | 4 ++--
+ 2 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/third_party/webrtc/common_audio/vad/vad_core.c b/third_party/webrtc/common_audio/vad/vad_core.c
+index 0340165eb5..1a3889c367 100644
+--- a/third_party/webrtc/common_audio/vad/vad_core.c
++++ b/third_party/webrtc/common_audio/vad/vad_core.c
+@@ -115,8 +115,8 @@ static int32_t WeightedAverage(int16_t* data, int16_t offset,
+ // undefined behavior, so not a good idea; this just makes UBSan ignore the
+ // violation, so that our old code can continue to do what it's always been
+ // doing.)
+-static inline int32_t OverflowingMulS16ByS32ToS32(int16_t a, int32_t b)
+-    RTC_NO_SANITIZE("signed-integer-overflow") {
++static inline int32_t RTC_NO_SANITIZE("signed-integer-overflow")
++    OverflowingMulS16ByS32ToS32(int16_t a, int32_t b) {
+   return a * b;
+ }
+ 
+diff --git a/third_party/webrtc/modules/audio_coding/codecs/isac/fix/source/lattice.c b/third_party/webrtc/modules/audio_coding/codecs/isac/fix/source/lattice.c
+index 2b92acb64a..b69a885f34 100644
+--- a/third_party/webrtc/modules/audio_coding/codecs/isac/fix/source/lattice.c
++++ b/third_party/webrtc/modules/audio_coding/codecs/isac/fix/source/lattice.c
+@@ -209,8 +209,8 @@ void WebRtcIsacfix_NormLatticeFilterMa(size_t orderCoef,
+ // Left shift of an int32_t that's allowed to overflow. (It's still undefined
+ // behavior, so not a good idea; this just makes UBSan ignore the violation, so
+ // that our old code can continue to do what it's always been doing.)
+-static inline int32_t OverflowingLShiftS32(int32_t x, int shift)
+-    RTC_NO_SANITIZE("shift") {
++static inline int32_t RTC_NO_SANITIZE("shift")
++    OverflowingLShiftS32(int32_t x, int shift) {
+   return x << shift;
+ }
+ 
+-- 
+2.19.0
+

@@ -1,0 +1,24 @@
+From 11e5460c9fdfd9f3366692281a20a5ef69ba4ad5 Mon Sep 17 00:00:00 2001
+From: Elvis Pranskevichus <elvis@magic.io>
+Date: Mon, 24 Sep 2018 23:44:33 -0400
+Subject: [PATCH 10/10] v8: include libplatform
+
+---
+ v8/BUILD.gn | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/v8/BUILD.gn b/v8/BUILD.gn
+index 494ba22f29..f5645f6a21 100644
+--- a/v8/BUILD.gn
++++ b/v8/BUILD.gn
+@@ -2675,6 +2675,7 @@ if (is_component_build) {
+ 
+     public_deps = [
+       ":v8_base",
++      ":v8_libplatform",
+       ":v8_maybe_snapshot",
+     ]
+ 
+-- 
+2.19.0
+

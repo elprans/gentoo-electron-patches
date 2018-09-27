@@ -1,0 +1,36 @@
+From 85d491e04a7697946a8944114a5e9eced7d6c20d Mon Sep 17 00:00:00 2001
+From: Elvis Pranskevichus <elvis@magic.io>
+Date: Sat, 22 Sep 2018 17:25:50 -0400
+Subject: [PATCH] Fix broken patch
+
+---
+ patches/076_patch_catalog_vuln.patch | 13 -------------
+ 1 file changed, 13 deletions(-)
+
+diff --git a/patches/076_patch_catalog_vuln.patch b/patches/076_patch_catalog_vuln.patch
+index e81b953..765f75f 100755
+--- a/patches/076_patch_catalog_vuln.patch
++++ b/patches/076_patch_catalog_vuln.patch
+@@ -21,19 +21,6 @@ index 4fd82fd..4b31651 100644
+          "control": [ "catalog::mojom::CatalogControl" ]
+        },
+        "requires": {
+- diff --git a/services/ui/manifest.json b/services/ui/manifest.json
+- index 3e7df92..dfd2c55 100644
+- --- a/services/ui/manifest.json
+- +++ b/services/ui/manifest.json
+- @@ -76,7 +76,7 @@
+-       },
+-       "requires": {
+-         "*": [ "app" ],
+- -        "catalog": [ "app" ],
+- +        "catalog": [ "directory" ],
+-         "service_manager": [ "service_manager:all_users" ],
+-         "ui": [ "ozone" ],
+-         "viz": [ "viz_host" ]
+ diff --git a/services/service_manager/service_manager.cc b/services/service_manager/service_manager.cc
+ index f25a789..2d984f8 100644
+ --- a/services/service_manager/service_manager.cc
+-- 
+2.16.4
+

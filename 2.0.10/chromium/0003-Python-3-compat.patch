@@ -1,7 +1,7 @@
-From 0e3b2fb111b5eb88117cc700bb969dd93589633a Mon Sep 17 00:00:00 2001
+From 12bb7cf6926dfe2da86c8eeab16a229cb41ee76e Mon Sep 17 00:00:00 2001
 From: Elvis Pranskevichus <elvis@magic.io>
 Date: Sat, 24 Mar 2018 15:15:21 -0400
-Subject: [PATCH 05/13] Python 3 compat
+Subject: [PATCH 03/10] Python 3 compat
 
 ---
  v8/gypfiles/detect_v8_host_arch.py | 4 +++-
@@ -30,7 +30,7 @@ index 89e8286e1f..cc619466a7 100644
  
  def DoMain(_):
 diff --git a/v8/gypfiles/toolchain.gypi b/v8/gypfiles/toolchain.gypi
-index 88afb8612e..eea5477dab 100644
+index 5733d2d54c..706a6fd20f 100644
 --- a/v8/gypfiles/toolchain.gypi
 +++ b/v8/gypfiles/toolchain.gypi
 @@ -40,7 +40,7 @@

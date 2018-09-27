@@ -1,4 +1,4 @@
-From 024d9183ea00e7cd4b607dd87a64e090db59efde Mon Sep 17 00:00:00 2001
+From a7df3a5af7f2a9150cba70cf4be207669e35f9dd Mon Sep 17 00:00:00 2001
 From: Elvis Pranskevichus <elvis@magic.io>
 Date: Sat, 11 Jun 2016 18:27:19 -0400
 Subject: [PATCH] Add support for external V8 snapshots
@@ -8,10 +8,10 @@ Subject: [PATCH] Add support for external V8 snapshots
  1 file changed, 87 insertions(+)
 
 diff --git a/src/node.cc b/src/node.cc
-index de63b891da..af3abde79e 100644
+index c1dbcaa4f3..39459278ca 100644
 --- a/src/node.cc
 +++ b/src/node.cc
-@@ -4465,6 +4465,91 @@ inline int Start(Isolate* isolate, IsolateData* isolate_data,
+@@ -4860,6 +4860,91 @@ inline int Start(Isolate* isolate, IsolateData* isolate_data,
    return exit_code;
  }
  
@@ -58,13 +58,13 @@ index de63b891da..af3abde79e 100644
 +
 +  if (fd == -1) {
 +    fprintf(stderr, "could not open snapshot file '%s': %s\n",
-+            path, sys_errlist[errno]);
++            path, strerror(errno));
 +    ABORT();
 +  }
 +
 +  if (fstat(fd, &sb) == -1) {
 +    fprintf(stderr, "could not stat snapshot file '%s': %s\n",
-+            path, sys_errlist[errno]);
++            path, strerror(errno));
 +    ABORT();
 +  }
 +
@@ -74,7 +74,7 @@ index de63b891da..af3abde79e 100644
 +            mmap(NULL, sb.st_size, PROT_READ, MAP_PRIVATE, fd, 0));
 +  if (*addr == MAP_FAILED) {
 +    fprintf(stderr, "could not read snapshot file '%s': %s\n",
-+            path, sys_errlist[errno]);
++            path, strerror(errno));
 +    ABORT();
 +  }
 +
@@ -103,7 +103,7 @@ index de63b891da..af3abde79e 100644
  inline int Start(uv_loop_t* event_loop,
                   int argc, const char* const* argv,
                   int exec_argc, const char* const* exec_argv) {
-@@ -4529,6 +4614,8 @@ int Start(int argc, char** argv) {
+@@ -4925,6 +5010,8 @@ int Start(int argc, char** argv) {
    const char** exec_argv;
    Init(&argc, const_cast<const char**>(argv), &exec_argc, &exec_argv);
  
@@ -113,5 +113,5 @@ index de63b891da..af3abde79e 100644
    {
      std::string extra_ca_certs;
 -- 
-2.16.1
+2.16.4
 

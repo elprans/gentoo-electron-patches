@@ -1,0 +1,37 @@
+From e31dbe7aefe5467325601cc273572519920b1526 Mon Sep 17 00:00:00 2001
+From: Elvis Pranskevichus <elvis@magic.io>
+Date: Thu, 7 Dec 2017 09:25:03 -0500
+Subject: [PATCH 06/10] GCC-7 compatibility
+
+---
+ .../WebKit/Source/platform/graphics/gpu/SharedGpuContext.h       | 1 +
+ third_party/WebKit/Source/platform/wtf/LinkedHashSet.h           | 1 +
+ 2 files changed, 2 insertions(+)
+
+diff --git a/third_party/WebKit/Source/platform/graphics/gpu/SharedGpuContext.h b/third_party/WebKit/Source/platform/graphics/gpu/SharedGpuContext.h
+index 76be3100a7..c53df5b1a0 100644
+--- a/third_party/WebKit/Source/platform/graphics/gpu/SharedGpuContext.h
++++ b/third_party/WebKit/Source/platform/graphics/gpu/SharedGpuContext.h
+@@ -8,6 +8,7 @@
+ #include "platform/PlatformExport.h"
+ #include "platform/wtf/ThreadSpecific.h"
+ 
++#include <functional>
+ #include <memory>
+ 
+ namespace gpu {
+diff --git a/third_party/WebKit/Source/platform/wtf/LinkedHashSet.h b/third_party/WebKit/Source/platform/wtf/LinkedHashSet.h
+index 83826b490e..f3940728be 100644
+--- a/third_party/WebKit/Source/platform/wtf/LinkedHashSet.h
++++ b/third_party/WebKit/Source/platform/wtf/LinkedHashSet.h
+@@ -685,6 +685,7 @@ inline LinkedHashSet<T, U, V, W>& LinkedHashSet<T, U, V, W>::operator=(
+   return *this;
+ }
+ 
++inline void SwapAnchor(LinkedHashSetNodeBase& a, LinkedHashSetNodeBase& b);
+ template <typename T, typename U, typename V, typename W>
+ inline void LinkedHashSet<T, U, V, W>::Swap(LinkedHashSet& other) {
+   impl_.swap(other.impl_);
+-- 
+2.19.0
+

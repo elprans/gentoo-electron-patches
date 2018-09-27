@@ -1,7 +1,7 @@
-From 0264aa9cd5b6162d040bb64cf8c6346bb5231314 Mon Sep 17 00:00:00 2001
+From d82c916ee61b8f842de385805aaa0e3da5dbcd2e Mon Sep 17 00:00:00 2001
 From: Elvis Pranskevichus <elvis@magic.io>
 Date: Sat, 24 Mar 2018 15:22:54 -0400
-Subject: [PATCH 07/12] Undo electron's decomponentization of v8
+Subject: [PATCH 07/13] Undo electron's decomponentization of v8
 
 ---
  v8/gni/v8.gni | 8 +-------
@@ -27,5 +27,5 @@ index 1b521f83c9..67e2c39753 100644
      configs += invoker.configs
      configs -= v8_remove_configs
 -- 
-2.16.1
+2.19.0
 

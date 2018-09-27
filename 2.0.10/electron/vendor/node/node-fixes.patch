@@ -1,0 +1,229 @@
+From 5fbb4d49fbc595f40306cd1caed17cd5b6fd0a4c Mon Sep 17 00:00:00 2001
+From: Elvis Pranskevichus <elvis@magic.io>
+Date: Wed, 10 Feb 2016 14:45:13 -0500
+Subject: [PATCH] Build fixes
+
+---
+ configure                      | 29 +++++++++++++++++++++++++----
+ lib/internal/bootstrap_node.js |  4 +++-
+ node.gyp                       | 37 +++++++++++++++++++++++++++++--------
+ src/node.cc                    |  1 +
+ src/node_main.cc               |  4 ++++
+ tools/gyp_node.py              |  1 +
+ 6 files changed, 63 insertions(+), 13 deletions(-)
+
+diff --git a/configure b/configure
+index 9e04b03d4f..259fec1a30 100755
+--- a/configure
++++ b/configure
+@@ -193,6 +193,27 @@ shared_optgroup.add_option('--shared-http-parser-libpath',
+     dest='shared_http_parser_libpath',
+     help='a directory to search for the shared http_parser DLL')
+ 
++shared_optgroup.add_option('--shared-nghttp2',
++    action='store_true',
++    dest='shared_libnghttp2',
++    help='link to a shared nghttp2 DLL instead of static linking')
++
++shared_optgroup.add_option('--shared-nghttp2-includes',
++    action='store',
++    dest='shared_libnghttp2_includes',
++    help='directory containing nghttp2 header files')
++
++shared_optgroup.add_option('--shared-nghttp2-libname',
++    action='store',
++    dest='shared_libnghttp2_libname',
++    default='nghttp2',
++    help='alternative lib name to link to [default: %default]')
++
++shared_optgroup.add_option('--shared-nghttp2-libpath',
++    action='store',
++    dest='shared_libnghttp2_libpath',
++    help='a directory to search for the shared nghttp2 DLL')
++
+ shared_optgroup.add_option('--shared-libuv',
+     action='store_true',
+     dest='shared_libuv',
+@@ -936,13 +957,12 @@ def configure_node(o):
+   node_module_version = getmoduleversion.get_version()
+ 
+   if sys.platform == 'darwin':
+-    shlib_suffix = '%s.dylib'
++    shlib_suffix = 'dylib'
+   elif sys.platform.startswith('aix'):
+-    shlib_suffix = '%s.a'
++    shlib_suffix = 'a'
+   else:
+-    shlib_suffix = 'so.%s'
++    shlib_suffix = 'so'
+ 
+-  shlib_suffix %= node_module_version
+   o['variables']['node_module_version'] = int(node_module_version)
+   o['variables']['shlib_suffix'] = shlib_suffix
+ 
+@@ -1405,6 +1425,7 @@ flavor = GetFlavor(flavor_params)
+ configure_node(output)
+ configure_library('zlib', output)
+ configure_library('http_parser', output)
++configure_library('libnghttp2', output)
+ configure_library('libuv', output)
+ configure_library('libcares', output)
+ # stay backwards compatible with shared cares builds
+diff --git a/lib/internal/bootstrap_node.js b/lib/internal/bootstrap_node.js
+index 9badeea065..a817b094f1 100644
+--- a/lib/internal/bootstrap_node.js
++++ b/lib/internal/bootstrap_node.js
+@@ -57,7 +57,9 @@
+     _process.setup_cpuUsage();
+     _process.setupMemoryUsage();
+ 
+-    setupAsarSupport();
++    if (!process.env._ELECTRON_BUILD_NO_ASAR) {
++      setupAsarSupport();
++    }
+ 
+     _process.setupKillAndExit();
+     _process.setupSignalHandlers();
+diff --git a/node.gyp b/node.gyp
+index 68f15efacf..836282bf13 100644
+--- a/node.gyp
++++ b/node.gyp
+@@ -1,4 +1,7 @@
+ {
++  'includes': [
++    'config.gypi'
++  ],
+   'variables': {
+     'v8_use_snapshot%': 'false',
+     'v8_trace_maps%': 0,
+@@ -14,10 +17,12 @@
+     'node_module_version%': '',
+     'node_shared_zlib%': 'false',
+     'node_shared_http_parser%': 'false',
++    'node_shared_libnghttp2%': 'false',
+     'node_shared_cares%': 'false',
+     'node_shared_libuv%': 'false',
+     'node_use_openssl%': 'true',
+     'node_shared_openssl%': 'false',
++    'node_v8_path%': 'deps/v8',
+     'node_v8_options%': '',
+     'node_enable_v8_vtunejit%': 'false',
+     'node_core_target_name%': 'node',
+@@ -162,7 +167,14 @@
+ 
+       'dependencies': [
+         'node_js2c#host',
+-        'deps/nghttp2/nghttp2.gyp:nghttp2'
++      ],
++
++      'conditions': [
++        [ 'node_shared_libnghttp2=="false"', {
++          'dependencies': [
++            'deps/nghttp2/nghttp2.gyp:nghttp2'
++          ]
++        }]
+       ],
+ 
+       'includes': [
+@@ -170,10 +182,10 @@
+       ],
+ 
+       'include_dirs': [
++        '<(node_v8_path)/include',
+         'src',
+         'tools/msvs/genfiles',
+-        '<(SHARED_INTERMEDIATE_DIR)', # for node_natives.h
+-        'deps/nghttp2/lib/includes'
++        '<(SHARED_INTERMEDIATE_DIR)' # for node_natives.h
+       ],
+ 
+       'sources': [
+@@ -293,6 +305,14 @@
+         # Warn when using deprecated V8 APIs.
+         'V8_DEPRECATION_WARNINGS=1',
+       ],
++
++      'link_settings': {
++        'ldflags': [
++          '-Wl,-rpath=\$$ORIGIN/',
++          # Make native module dynamic loading work.
++          '-rdynamic',
++        ],
++      },
+     },
+     {
+       'target_name': 'mkssldef',
+@@ -716,11 +736,6 @@
+             }]
+           ]
+         }],
+-        [ 'node_use_v8_platform=="true"', {
+-          'dependencies': [
+-            'deps/v8/src/v8.gyp:v8_libplatform',
+-          ],
+-        }],
+         [ 'node_use_dtrace=="true" and OS!="mac" and OS!="linux"', {
+           'copies': [{
+             'destination': '<(OBJ_DIR)/cctest/src',
+@@ -729,6 +744,12 @@
+               '<(OBJ_PATH)<(OBJ_SEPARATOR)node_dtrace_provider.<(OBJ_SUFFIX)',
+               '<(OBJ_PATH)<(OBJ_SEPARATOR)node_dtrace.<(OBJ_SUFFIX)',
+             ]},
++	  ],
++	}],
++        [ 'node_use_bundled_v8=="true"', {
++          'dependencies': [
++            'deps/v8/src/v8.gyp:v8',
++            'deps/v8/src/v8.gyp:v8_libplatform'
+           ],
+         }],
+         ['OS=="solaris"', {
+diff --git a/src/node.cc b/src/node.cc
+index 39459278ca..1cd6a3c6b0 100644
+--- a/src/node.cc
++++ b/src/node.cc
+@@ -63,6 +63,7 @@
+ #include "req-wrap-inl.h"
+ #include "string_bytes.h"
+ #include "tracing/agent.h"
++#include "tracing/trace_event.h"
+ #include "util.h"
+ #include "uv.h"
+ #if NODE_USE_V8_PLATFORM
+diff --git a/src/node_main.cc b/src/node_main.cc
+index 2a511b9299..451da7b647 100644
+--- a/src/node_main.cc
++++ b/src/node_main.cc
+@@ -87,6 +87,7 @@ namespace node {
+   extern bool linux_at_secure;
+ }  // namespace node
+ 
++#include <stdlib.h>
+ int main(int argc, char *argv[]) {
+ #if defined(__linux__)
+   char** envp = environ;
+@@ -103,6 +104,9 @@ int main(int argc, char *argv[]) {
+   // calls elsewhere in the program (e.g., any logging from V8.)
+   setvbuf(stdout, nullptr, _IONBF, 0);
+   setvbuf(stderr, nullptr, _IONBF, 0);
++#ifdef ELECTRON_NODE_BUILD_NO_ASAR
++  setenv("_ELECTRON_BUILD_NO_ASAR", "1", 1);
++#endif
+   return node::Start(argc, argv);
+ }
+ #endif
+diff --git a/tools/gyp_node.py b/tools/gyp_node.py
+index 043053c3da..04bb4f8cf7 100755
+--- a/tools/gyp_node.py
++++ b/tools/gyp_node.py
+@@ -13,6 +13,7 @@ import gyp
+ output_dir = os.path.join(os.path.abspath(node_root), 'out')
+ 
+ def run_gyp(args):
++  return
+   # GYP bug.
+   # On msvs it will crash if it gets an absolute path.
+   # On Mac/make it will crash if it doesn't get an absolute path.
+-- 
+2.16.4
+

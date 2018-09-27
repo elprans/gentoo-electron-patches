@@ -1,7 +1,7 @@
-From 2319320b35fef4dca2ff091e012772dc5270af14 Mon Sep 17 00:00:00 2001
+From 1c538d919ea64eeea39a794eb90a2c510564fdef Mon Sep 17 00:00:00 2001
 From: jshin <jshin@chromium.org>
 Date: Thu, 23 Mar 2017 02:57:16 -0700
-Subject: [PATCH 01/12] Prepare Chromium and Blink for ICU 59
+Subject: [PATCH 01/13] Prepare Chromium and Blink for ICU 59
 
 ICU 59 uses char16_t as UChar instead of {wchar_t, uint16_t}.
 As a result, char16_t is not compatible with char16 any more.
@@ -28,29 +28,29 @@ TEST=trybots are all green.
 Review-Url: https://codereview.chromium.org/2740673002
 Cr-Commit-Position: refs/heads/master@{#459034}
 ---
- ash/common/system/date/date_view.cc                | 30 ++------------------
- base/BUILD.gn                                      |  1 +
- base/i18n/message_formatter.cc                     |  5 ++--
- base/i18n/number_formatting.cc                     |  5 ++--
- base/i18n/string_compare.cc                        |  5 ++--
- base/i18n/time_formatting.cc                       | 14 ++++------
- base/i18n/time_formatting_unittest.cc              |  3 +-
- base/i18n/timezone.cc                              |  4 +--
- base/i18n/unicodestring.h                          | 32 ++++++++++++++++++++++
- chrome/browser/chromeos/system/timezone_util.cc    |  6 ++--
- .../webui/md_downloads/downloads_list_tracker.cc   |  4 +--
- chromeos/settings/timezone_settings.cc             |  4 +--
- .../core/browser/autofill_profile_comparator.cc    |  3 +-
- components/autofill/core/browser/credit_card.cc    |  6 ++--
- .../browser/android/date_time_chooser_android.cc   |  4 +--
- content/renderer/android/email_detector.cc         |  4 +--
- ios/chrome/browser/notification_promo_unittest.cc  | 10 ++-----
- net/ftp/ftp_util.cc                                |  5 ++--
- .../Source/core/html/forms/EmailInputType.cpp      | 13 +++++++--
- third_party/WebKit/Source/wtf/text/AtomicString.h  |  2 ++
- third_party/WebKit/Source/wtf/text/StringView.h    |  2 ++
- third_party/WebKit/Source/wtf/text/WTFString.h     |  2 ++
- .../src/cpp/src/sample/chromium/subsetter_impl.cc  |  2 ++
+ ash/common/system/date/date_view.cc           | 30 ++---------------
+ base/BUILD.gn                                 |  1 +
+ base/i18n/message_formatter.cc                |  5 +--
+ base/i18n/number_formatting.cc                |  5 +--
+ base/i18n/string_compare.cc                   |  5 +--
+ base/i18n/time_formatting.cc                  | 14 ++++----
+ base/i18n/time_formatting_unittest.cc         |  3 +-
+ base/i18n/timezone.cc                         |  4 +--
+ base/i18n/unicodestring.h                     | 32 +++++++++++++++++++
+ .../browser/chromeos/system/timezone_util.cc  |  6 ++--
+ .../md_downloads/downloads_list_tracker.cc    |  4 +--
+ chromeos/settings/timezone_settings.cc        |  4 +--
+ .../browser/autofill_profile_comparator.cc    |  3 +-
+ .../autofill/core/browser/credit_card.cc      |  6 ++--
+ .../android/date_time_chooser_android.cc      |  4 +--
+ content/renderer/android/email_detector.cc    |  4 +--
+ .../browser/notification_promo_unittest.cc    | 10 ++----
+ net/ftp/ftp_util.cc                           |  5 +--
+ .../Source/core/html/forms/EmailInputType.cpp | 13 ++++++--
+ .../WebKit/Source/wtf/text/AtomicString.h     |  2 ++
+ .../WebKit/Source/wtf/text/StringView.h       |  2 ++
+ .../WebKit/Source/wtf/text/WTFString.h        |  2 ++
+ .../cpp/src/sample/chromium/subsetter_impl.cc |  2 ++
  23 files changed, 97 insertions(+), 69 deletions(-)
  create mode 100644 base/i18n/unicodestring.h
 
@@ -646,5 +646,5 @@ index c53e60729f..17452e13ca 100644
  #include "sfntly/table/bitmap/ebdt_table.h"
  #include "sfntly/table/bitmap/index_sub_table.h"
 -- 
-2.16.1
+2.19.0
 

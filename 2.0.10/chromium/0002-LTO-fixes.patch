@@ -1,30 +1,25 @@
-From 719d0953dddd4cab67f0f049f2d1730624fc51d0 Mon Sep 17 00:00:00 2001
+From 6e3aa6cd6d54ccb0ebae73dfd3b077a966e7b097 Mon Sep 17 00:00:00 2001
 From: Elvis Pranskevichus <elvis@magic.io>
 Date: Mon, 21 Aug 2017 10:16:44 -0400
-Subject: [PATCH 04/13] LTO fixes
+Subject: [PATCH 02/10] LTO fixes
 
 ---
- build/config/compiler/BUILD.gn    | 35 ++++++++++++++++++++++---------
- build/config/posix/BUILD.gn       |  2 +-
- build/toolchain/gcc_ar_wrapper.py | 12 ++++++++++-
- 3 files changed, 37 insertions(+), 12 deletions(-)
+ build/config/compiler/BUILD.gn    | 31 +++++++++++++++++++++++++++----
+ build/toolchain/gcc_ar_wrapper.py | 12 +++++++++++-
+ 2 files changed, 38 insertions(+), 5 deletions(-)
 
 diff --git a/build/config/compiler/BUILD.gn b/build/config/compiler/BUILD.gn
-index 9137028913..5f7a796544 100644
+index 5b2e5ce93c..f9ae1e7e64 100644
 --- a/build/config/compiler/BUILD.gn
 +++ b/build/config/compiler/BUILD.gn
-@@ -478,20 +478,35 @@ config("compiler") {
+@@ -505,14 +505,37 @@ config("compiler") {
+         ldflags += [ "-Wl,--lto-O0" ]
+       }
      } else {
-       # Note: ThinLTO does not currently have this feature implemented
-       # For Full LTO, it provides a measurable runtime speedup of Chrome.
--      cflags += [
--        "-flto",
--        "-fwhole-program-vtables",
--      ]
--      ldflags += [
--        "-flto",
--        "-fwhole-program-vtables",
--      ]
+-      cflags += [ "-flto" ]
+-      ldflags += [ "-flto" ]
++      # Note: ThinLTO does not currently have this feature implemented
++      # For Full LTO, it provides a measurable runtime speedup of Chrome.
 +      if (is_clang) {
 +        cflags += [
 +          "-flto",
@@ -58,35 +53,22 @@ index 9137028913..5f7a796544 100644
            ldflags += [ "-Wl,-plugin-opt,O1" ]
          }
        } else if (is_mac) {
-@@ -508,7 +523,7 @@ config("compiler") {
-     # targeting ARM, without this flag, LTO produces a .text section that is
-     # larger than the maximum call displacement, preventing the linker from
-     # relocating calls (http://llvm.org/PR22999).
+@@ -535,7 +558,7 @@ config("compiler") {
+     # Also, when targeting ARM, without this flag, LTO produces a .text section
+     # that is larger than the maximum call displacement, preventing the linker
+     # from relocating calls (http://llvm.org/PR22999).
 -    if (is_linux) {
 +    if (is_linux && is_clang) {
-       ldflags += [ "-Wl,-plugin-opt,-function-sections" ]
-     }
-   }
-diff --git a/build/config/posix/BUILD.gn b/build/config/posix/BUILD.gn
-index d7e917af44..fc68864ad0 100644
---- a/build/config/posix/BUILD.gn
-+++ b/build/config/posix/BUILD.gn
-@@ -21,7 +21,7 @@ config("compiler") {
-   if ((allow_posix_link_time_opt || is_cfi) && !is_nacl) {
-     arflags = [
-       "--plugin",
--      rebase_path("$clang_base_path/lib/LLVMgold.so", root_build_dir),
-+      "auto"
-     ]
-   }
- }
+       if (use_lld) {
+         ldflags += [
+           "-Wl,-mllvm,-function-sections",
 diff --git a/build/toolchain/gcc_ar_wrapper.py b/build/toolchain/gcc_ar_wrapper.py
-index de53df09e9..39c7b56b46 100755
+index 1c29df23e5..3b22cbfe7c 100755
 --- a/build/toolchain/gcc_ar_wrapper.py
 +++ b/build/toolchain/gcc_ar_wrapper.py
-@@ -47,7 +47,17 @@ def main():
+@@ -59,7 +59,17 @@ def main():
  
-   command = [args.ar, args.operation]
+   command = [args.ar] + object_mode + [args.operation]
    if args.plugin is not None:
 -    command += ['--plugin', args.plugin]
 +    if args.plugin == 'auto':

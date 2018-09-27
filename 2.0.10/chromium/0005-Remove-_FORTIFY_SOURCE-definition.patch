@@ -1,22 +1,25 @@
-From 3fa1a3fa2a55456bf7225b4b6f8556d39eaf6897 Mon Sep 17 00:00:00 2001
+From fe69ca6920a7ba0a26d609a28259fa0a569e69ca Mon Sep 17 00:00:00 2001
 From: Elvis Pranskevichus <elvis@magic.io>
 Date: Sat, 24 Mar 2018 15:29:09 -0400
-Subject: [PATCH 09/13] Remove _FORTIFY_SOURCE definition
+Subject: [PATCH 05/10] Remove _FORTIFY_SOURCE definition
 
 ---
- build/config/compiler/BUILD.gn | 13 -------------
- 1 file changed, 13 deletions(-)
+ build/config/compiler/BUILD.gn | 16 ----------------
+ 1 file changed, 16 deletions(-)
 
 diff --git a/build/config/compiler/BUILD.gn b/build/config/compiler/BUILD.gn
-index 5f7a796544..d4ab3c97b2 100644
+index f9ae1e7e64..e13b644612 100644
 --- a/build/config/compiler/BUILD.gn
 +++ b/build/config/compiler/BUILD.gn
-@@ -1158,19 +1158,6 @@ config("chromium_code") {
+@@ -1239,22 +1239,6 @@ config("chromium_code") {
        "__STDC_FORMAT_MACROS",
      ]
  
 -    if (!is_debug && !using_sanitizer &&
--        (!is_linux || !is_clang || is_official_build)) {
+-        (!is_linux || !is_clang || is_official_build) &&
+-        current_cpu != "s390x" && current_cpu != "s390" &&
+-        current_cpu != "ppc64" && current_cpu != "ppc64" &&
+-        current_cpu != "mips" && current_cpu != "mips64") {
 -      # _FORTIFY_SOURCE isn't really supported by Clang now, see
 -      # http://llvm.org/bugs/show_bug.cgi?id=16821.
 -      # It seems to work fine with Ubuntu 12 headers though, so use it in
