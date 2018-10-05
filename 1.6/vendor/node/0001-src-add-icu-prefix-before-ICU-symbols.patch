@@ -1,0 +1,88 @@
+From aed5fc06cd18f78864d4ce1dd39ab82b9e3b796d Mon Sep 17 00:00:00 2001
+From: "Steven R. Loomis" <srloomis@us.ibm.com>
+Date: Wed, 7 Feb 2018 16:42:21 -0800
+Subject: [PATCH] src: add "icu::" prefix before ICU symbols
+
+In ICU 61.x, icu4c will no longer put its declarations in the global namespace.
+Everything will be in the "icu::" namespace (or icu_60:: in the linker).
+Prepare for this.
+https://ssl.icu-project.org/trac/ticket/13460
+---
+ src/node_i18n.cc       |  2 +-
+ tools/icu/iculslocs.cc | 14 +++++++-------
+ 2 files changed, 8 insertions(+), 8 deletions(-)
+
+diff --git a/src/node_i18n.cc b/src/node_i18n.cc
+index fab594ce79..a12d509627 100644
+--- a/src/node_i18n.cc
++++ b/src/node_i18n.cc
+@@ -353,7 +353,7 @@ static const char* GetVersion(const char* type,
+   } else if (!strcmp(type, TYPE_UNICODE)) {
+     return U_UNICODE_VERSION;
+   } else if (!strcmp(type, TYPE_TZ)) {
+-    return TimeZone::getTZDataVersion(*status);
++    return icu::TimeZone::getTZDataVersion(*status);
+   } else if (!strcmp(type, TYPE_CLDR)) {
+     UVersionInfo versionArray;
+     ulocdata_getCLDRVersion(versionArray, status);
+diff --git a/tools/icu/iculslocs.cc b/tools/icu/iculslocs.cc
+index 05c1747a31..d9ec08dcfd 100644
+--- a/tools/icu/iculslocs.cc
++++ b/tools/icu/iculslocs.cc
+@@ -65,7 +65,7 @@ int VERBOSE = 0;
+ #define RES_INDEX "res_index"
+ #define INSTALLEDLOCALES "InstalledLocales"
+ 
+-CharString packageName;
++icu::CharString packageName;
+ const char* locale = RES_INDEX;  // locale referring to our index
+ 
+ void usage() {
+@@ -148,7 +148,7 @@ int localeExists(const char* loc, UBool* exists) {
+   if (VERBOSE > 1) {
+     u_printf("Trying to open %s:%s\n", packageName.data(), loc);
+   }
+-  LocalUResourceBundlePointer aResource(
++  icu::LocalUResourceBundlePointer aResource(
+       ures_openDirect(packageName.data(), loc, &status));
+   *exists = FALSE;
+   if (U_SUCCESS(status)) {
+@@ -190,11 +190,11 @@ void printIndent(const LocalUFILEPointer* bf, int indent) {
+  * @return 0 for OK, 1 for err
+  */
+ int dumpAllButInstalledLocales(int lev,
+-                               LocalUResourceBundlePointer* bund,
++                               icu::LocalUResourceBundlePointer* bund,
+                                LocalUFILEPointer* bf,
+                                UErrorCode* status) {
+   ures_resetIterator(bund->getAlias());
+-  LocalUResourceBundlePointer t;
++  icu::LocalUResourceBundlePointer t;
+   while (U_SUCCESS(*status) && ures_hasNext(bund->getAlias())) {
+     t.adoptInstead(ures_getNextResource(bund->getAlias(), t.orphan(), status));
+     ASSERT_SUCCESS(status, "while processing table");
+@@ -256,10 +256,10 @@ int list(const char* toBundle) {
+     u_printf("\"locale\": %s\n", locale);
+   }
+ 
+-  LocalUResourceBundlePointer bund(
++  icu::LocalUResourceBundlePointer bund(
+       ures_openDirect(packageName.data(), locale, &status));
+   ASSERT_SUCCESS(&status, "while opening the bundle");
+-  LocalUResourceBundlePointer installedLocales(
++  icu::LocalUResourceBundlePointer installedLocales(
+       ures_getByKey(bund.getAlias(), INSTALLEDLOCALES, NULL, &status));
+   ASSERT_SUCCESS(&status, "while fetching installed locales");
+ 
+@@ -295,7 +295,7 @@ int list(const char* toBundle) {
+   }
+ 
+   // OK, now list them.
+-  LocalUResourceBundlePointer subkey;
++  icu::LocalUResourceBundlePointer subkey;
+ 
+   int validCount = 0;
+   for (int32_t i = 0; i < count; i++) {
+-- 
+2.19.0
+
