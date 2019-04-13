@@ -1,0 +1,34 @@
+From 853569395f7fd0ff8f6dcc224b258502d3b16f8b Mon Sep 17 00:00:00 2001
+From: Elvis Pranskevichus <elvis@magic.io>
+Date: Sat, 24 Mar 2018 18:17:59 -0400
+Subject: [PATCH 4/6] Remove third-party fonts
+
+---
+ content/shell/test_runner/BUILD.gn | 6 ------
+ 1 file changed, 6 deletions(-)
+
+diff --git a/content/shell/test_runner/BUILD.gn b/content/shell/test_runner/BUILD.gn
+index ca1e81aa14..0f470d9c25 100644
+--- a/content/shell/test_runner/BUILD.gn
++++ b/content/shell/test_runner/BUILD.gn
+@@ -150,8 +150,6 @@ if (use_x11) {
+     # TODO(sergeyu): Move these fonts to third_party/content_shell_fonts .
+     visibility = [ ":*" ]
+     sources = [
+-      "//third_party/gardiner_mod/GardinerModBug.ttf",
+-      "//third_party/gardiner_mod/GardinerModCat.ttf",
+       "resources/fonts/fonts.conf",
+     ]
+     outputs = [
+@@ -204,8 +202,4 @@ group("resources") {
+     deps += [ ":copy_android_fonts_config" ]
+     data_deps += [ ":copy_android_fonts_config" ]
+   }
+-  if (is_android || is_linux || is_fuchsia) {
+-    deps += [ "//third_party/content_shell_fonts" ]
+-    data_deps += [ "//third_party/content_shell_fonts" ]
+-  }
+ }
+-- 
+2.19.2
+

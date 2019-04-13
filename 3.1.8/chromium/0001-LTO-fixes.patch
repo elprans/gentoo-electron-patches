@@ -1,0 +1,71 @@
+From 5e0743cef5289c52b73053026f1d9ffcce72cb88 Mon Sep 17 00:00:00 2001
+From: Elvis Pranskevichus <elvis@magic.io>
+Date: Mon, 21 Aug 2017 10:16:44 -0400
+Subject: [PATCH 1/6] LTO fixes
+
+---
+ build/config/compiler/BUILD.gn    | 24 ++++++++++++++++++++++++
+ build/toolchain/gcc_ar_wrapper.py | 12 +++++++++++-
+ 2 files changed, 35 insertions(+), 1 deletion(-)
+
+diff --git a/build/config/compiler/BUILD.gn b/build/config/compiler/BUILD.gn
+index bb33e5450e..bf0d625ee7 100644
+--- a/build/config/compiler/BUILD.gn
++++ b/build/config/compiler/BUILD.gn
+@@ -577,6 +577,30 @@ config("compiler") {
+     # much.
+     if (use_lld && (is_android || (is_linux && !is_chromeos))) {
+       ldflags += [ "-Wl,--lto-O0" ]
++    } else {
++      if (is_clang) {
++        cflags += [
++          "-flto",
++          "-fwhole-program-vtables"
++        ]
++        ldflags += [
++          "-flto",
++          "-fwhole-program-vtables"
++        ]
++      } else {
++        cflags += [
++          "-flto=4",
++          "-fno-fat-lto-objects",
++          "-fuse-linker-plugin",
++          "--param=lto-partitions=1",
++        ]
++        ldflags += [
++          "-flto=4",
++          "-fno-fat-lto-objects",
++          "-fuse-linker-plugin",
++          "--param=lto-partitions=1",
++        ]
++      }
+     }
+ 
+     # -fwhole-program-vtables doesn't work well in Electron right now, as it's
+diff --git a/build/toolchain/gcc_ar_wrapper.py b/build/toolchain/gcc_ar_wrapper.py
+index 893b859f08..a9262dfa71 100755
+--- a/build/toolchain/gcc_ar_wrapper.py
++++ b/build/toolchain/gcc_ar_wrapper.py
+@@ -59,7 +59,17 @@ def main():
+ 
+   command = [args.ar] + object_mode + [args.operation]
+   if args.plugin is not None:
+-    command += ['--plugin', args.plugin]
++    if args.plugin == 'auto':
++      gcc = os.environ.get('CC', '/usr/bin/cc')
++      gcc_ver = subprocess.check_output([gcc, '-dumpversion'],
++                                        universal_newlines=True)
++      gcc_ver = gcc_ver.strip(' \n')
++      plugin = '/usr/libexec/gcc/x86_64-pc-linux-gnu/{}/liblto_plugin.so'. \
++        format(gcc_ver)
++    else:
++      plugin = args.plugin
++
++    command += ['--plugin', plugin]
+   command.append(args.output)
+   command += args.inputs
+ 
+-- 
+2.19.2
+

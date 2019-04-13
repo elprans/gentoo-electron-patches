@@ -1,0 +1,220 @@
+From 360a01af6fbbd6acbe90684aae2d47285f4096bd Mon Sep 17 00:00:00 2001
+From: Elvis Pranskevichus <elvis@magic.io>
+Date: Fri, 28 Apr 2017 17:22:38 -0400
+Subject: [PATCH] Gentoo build fixes
+
+---
+ chromiumcontent/BUILD.gn      | 20 +++-----------------
+ chromiumcontent/build_libs.py |  3 ++-
+ script/create-dist            | 22 ++++++++++++----------
+ script/lib/config.py          |  2 +-
+ script/lib/ninja.py           |  2 +-
+ script/lib/patches.py         |  4 ++++
+ 6 files changed, 23 insertions(+), 30 deletions(-)
+
+diff --git a/chromiumcontent/BUILD.gn b/chromiumcontent/BUILD.gn
+index 70ad2b2..fd833a0 100644
+--- a/chromiumcontent/BUILD.gn
++++ b/chromiumcontent/BUILD.gn
+@@ -223,6 +223,7 @@ if (is_electron_build && !is_component_build) {
+     script = "build_libs.py"
+     args = [ "-o", rebase_path("$target_out_dir/objects.gni"),
+              "-s", rebase_path(outputs[0]),
++             "-b", rebase_path(root_build_dir),
+              "-t", target_cpu ]
+ 
+     deps = [ ":targets" ]
+@@ -251,8 +252,8 @@ if (is_electron_build && !is_component_build) {
+         ":webkitbindings",
+         ":webkitmodules",
+         ":webrtc",
+-        ":v8",
+-        ":v8base",
++        "//v8:v8",
++        "//v8:v8_libplatform",
+       ]
+       if (use_custom_libcxx) {
+         deps += [ ":libc++" ]
+@@ -341,21 +342,6 @@ if (is_electron_build && !is_component_build) {
+       sources = obj_webrtc
+     }
+ 
+-    static_library("v8") {
+-      complete_static_lib = true
+-      sources = obj_v8
+-    }
+-
+-    split_static_library("v8base") {
+-      complete_static_lib = true
+-      sources = obj_v8base
+-      if (is_win) {
+-        split_count = 2
+-      } else {
+-        split_count = 1
+-      }
+-    }
+-
+     if (use_custom_libcxx) {
+       static_library("libc++") {
+         complete_static_lib = true
+diff --git a/chromiumcontent/build_libs.py b/chromiumcontent/build_libs.py
+index 39b8bb2..692b2b3 100644
+--- a/chromiumcontent/build_libs.py
++++ b/chromiumcontent/build_libs.py
+@@ -7,6 +7,7 @@ parser = argparse.ArgumentParser()
+ parser.add_argument('-o', dest='out')
+ parser.add_argument('-s', dest='stamp')
+ parser.add_argument('-t', dest='target_cpu')
++parser.add_argument('-b', dest='root_build_dir')
+ args = parser.parse_args()
+ 
+ def walk_dir(root, exclude_dirs=[]):
+@@ -101,7 +102,7 @@ with open(args.out, 'w') as out:
+             "third_party/usrsctp",
+             "third_party/woff2",
+             "third_party/zlib",
+-            "tools",
++            "tools/battor_agent",
+             "ui",
+             "url",
+         ] + additional_libchromiumcontent,
+diff --git a/script/create-dist b/script/create-dist
+index b4fd70d..49715fa 100755
+--- a/script/create-dist
++++ b/script/create-dist
+@@ -55,7 +55,6 @@ COMPONENTS = ['static_library', 'shared_library', 'native_mksnapshot']
+ BINARIES = {
+   'all': [
+     'content_shell.pak',
+-    'icudtl.dat',
+     'natives_blob.bin',
+     'v8_context_snapshot.bin',
+     os.path.join('gen', 'blink', 'public', 'resources', 'blink_image_resources_200_percent.pak'),
+@@ -69,7 +68,6 @@ BINARIES = {
+     'libffmpeg.dylib',
+   ],
+   'linux': [
+-    'libffmpeg.so',
+   ],
+   'win32': [
+     'd3dcompiler_47.dll',
+@@ -91,8 +89,6 @@ V8_SNAPSHOT_BINARIES = {
+     'v8_context_snapshot_generator',
+   ],
+   'linux': [
+-    'libicui18n.so',
+-    'libicuuc.so',
+     'libv8.so',
+     'natives_blob.bin',
+     'snapshot_blob.bin',
+@@ -443,13 +439,10 @@ def generate_ninja(args, ninja):
+     if ((args.component == 'all' or args.component == component) and
+         (component != 'native_mksnapshot' or 'arm' in target_arch)):
+       copy_binaries(target_arch, component, create_debug_archive,
+-                    args.keep_debug_symbols, ninja)
++                    args.keep_debug_symbols, ninja, args.system_icu)
+       copy_generated_sources(target_arch, component, ninja)
+       copy_locales(target_arch, component, ninja)
+ 
+-  if args.component != 'native_mksnapshot':
+-    copy_ffmpeg(target_arch, ninja)
+-    copy_sources(ninja)
+   generate_licenses(ninja)
+ 
+ 
+@@ -472,6 +465,8 @@ def parse_args():
+                       help='static_library or shared_library or all')
+   parser.add_argument('--no_zip', action='store_true',
+                       help='Do not create distribution archive')
++  parser.add_argument('--system-icu', action='store_true', dest='system_icu',
++                      help='Use system icu.')
+   return parser.parse_args()
+ 
+ 
+@@ -504,7 +499,7 @@ def copy_with_blacklist(target_arch, src, dest, ninja):
+ 
+ 
+ def copy_binaries(target_arch, component, create_debug_archive,
+-                  keep_debug_symbols, ninja):
++                  keep_debug_symbols, ninja, system_icu):
+   output_dir = get_output_dir(SOURCE_ROOT, target_arch, component)
+   target_dir = component
+ 
+@@ -516,6 +511,12 @@ def copy_binaries(target_arch, component, create_debug_archive,
+ 
+   binaries = BINARIES['all'] + BINARIES[TARGET_PLATFORM]
+ 
++  if not system_icu:
++    binaries.append('icudtl.dat')
++    V8_SNAPSHOT_BINARIES[TARGET_PLATFORM].extend([
++      'libicui18n.so',
++      'libicuuc.so',
++    ])
+   if component == 'shared_library':
+     binaries += BINARIES_SHARED_LIBRARY[TARGET_PLATFORM]
+   for binary in binaries:
+@@ -642,6 +643,7 @@ def copy_locales(target_arch, component, ninja):
+     new_name = re.sub('content_strings_', '', filename)
+     ninja.copy(src_file, os.path.join(target_dir, new_name), False)
+ 
++
+ def copy_sources(ninja):
+   for include_path in INCLUDE_DIRS:
+     copy_headers(include_path, relative_to=SRC_DIR, destination=DIST_SRC_DIR, ninja=ninja)
+@@ -667,7 +669,6 @@ def copy_ffmpeg(target_arch, ninja):
+   ninja.copy(os.path.join(output_dir, binary), target_dir)
+ 
+ 
+-
+ def copy_headers(relative_path, relative_to, destination, ninja):
+   abs_path = os.path.join(relative_to, relative_path)
+   for dirpath, dirnames, filenames in os.walk(abs_path):
+@@ -717,6 +718,7 @@ def link_binary_to_debug_file(objcopy, binfile, symfile, dirname, env):
+ def run_strip(target_arch, filename, create_debug_archive):
+   # Static libraries are not stripped because it would remove
+   # all the symbols in it.
++  return
+   if filename.endswith('.a'):
+     return
+ 
+diff --git a/script/lib/config.py b/script/lib/config.py
+index 9a96758..93e2201 100644
+--- a/script/lib/config.py
++++ b/script/lib/config.py
+@@ -44,4 +44,4 @@ def set_mips64el_env(env):
+ 
+ 
+ def get_output_dir(source_root, target_arch, component):
+-  return os.path.join(source_root, 'src', 'out-' + target_arch, component)
++  return os.environ.get('CHROMIUM_BUILD_DIR')
+diff --git a/script/lib/ninja.py b/script/lib/ninja.py
+index f9a185f..7eeba46 100644
+--- a/script/lib/ninja.py
++++ b/script/lib/ninja.py
+@@ -15,7 +15,7 @@ def __get_binary_path():
+ 
+ 
+ def run(directory, target=None, env=None):
+-  ninja_binary = __get_binary_path()
++  ninja_binary = '/usr/bin/ninja'
+ 
+   args = [ninja_binary,
+           '-C', directory
+diff --git a/script/lib/patches.py b/script/lib/patches.py
+index 87a3233..07c7b95 100644
+--- a/script/lib/patches.py
++++ b/script/lib/patches.py
+@@ -86,6 +86,10 @@ class PatchesConfig:
+       return None
+ 
+     repo_path = config_contents['repo']
++    if repo_path == 'src':
++      repo_path = ''
++    elif repo_path.startswith('src/'):
++      repo_path = repo_path[4:]
+     if sys.platform == 'win32':
+       repo_path = repo_path.replace('/', '\\')
+ 
+-- 
+2.21.0
+

@@ -1,0 +1,29 @@
+From 9ee22e75108e3f20532f2e7b16eb594ebc9ac5de Mon Sep 17 00:00:00 2001
+From: Elvis Pranskevichus <elvis@magic.io>
+Date: Sat, 24 Mar 2018 20:31:06 -0400
+Subject: [PATCH 5/6] system nodejs
+
+---
+ third_party/node/node.py | 6 +-----
+ 1 file changed, 1 insertion(+), 5 deletions(-)
+
+diff --git a/third_party/node/node.py b/third_party/node/node.py
+index 8097e2c49a..8a7a14c7b8 100755
+--- a/third_party/node/node.py
++++ b/third_party/node/node.py
+@@ -10,11 +10,7 @@ import sys
+ 
+ 
+ def GetBinaryPath():
+-  return os_path.join(os_path.dirname(__file__), *{
+-    'Darwin': ('mac', 'node-darwin-x64', 'bin', 'node'),
+-    'Linux': ('linux', 'node-linux-x64', 'bin', 'node'),
+-    'Windows': ('win', 'node.exe'),
+-  }[platform.system()])
++  return '/usr/bin/node'
+ 
+ 
+ def RunNode(cmd_parts, stdout=None):
+-- 
+2.19.2
+

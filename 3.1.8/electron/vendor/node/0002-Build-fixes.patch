@@ -1,0 +1,142 @@
+From f13393b2681be7dcbd1977b31d412f8222bed881 Mon Sep 17 00:00:00 2001
+From: Elvis Pranskevichus <elvis@magic.io>
+Date: Wed, 10 Feb 2016 14:45:13 -0500
+Subject: [PATCH 2/2] Build fixes
+
+---
+ configure                      |  7 +++----
+ lib/internal/bootstrap/node.js |  4 +++-
+ node.gyp                       | 21 +++++++++++++++++++++
+ src/node_main.cc               |  4 ++++
+ tools/gyp_node.py              |  1 +
+ 5 files changed, 32 insertions(+), 5 deletions(-)
+
+diff --git a/configure b/configure
+index cfe990a402..eb0c436ea0 100755
+--- a/configure
++++ b/configure
+@@ -997,13 +997,12 @@ def configure_node(o):
+   node_module_version = getmoduleversion.get_version()
+ 
+   if sys.platform == 'darwin':
+-    shlib_suffix = '%s.dylib'
++    shlib_suffix = 'dylib'
+   elif sys.platform.startswith('aix'):
+-    shlib_suffix = '%s.a'
++    shlib_suffix = 'a'
+   else:
+-    shlib_suffix = 'so.%s'
++    shlib_suffix = 'so'
+ 
+-  shlib_suffix %= node_module_version
+   o['variables']['node_module_version'] = int(node_module_version)
+   o['variables']['shlib_suffix'] = shlib_suffix
+ 
+diff --git a/lib/internal/bootstrap/node.js b/lib/internal/bootstrap/node.js
+index 9411f376bb..bcb239ede9 100644
+--- a/lib/internal/bootstrap/node.js
++++ b/lib/internal/bootstrap/node.js
+@@ -59,7 +59,9 @@
+     _process.setup_hrtime();
+     _process.setup_cpuUsage();
+     _process.setupMemoryUsage();
+-    setupAsarSupport();
++    if (!process.env._ELECTRON_BUILD_NO_ASAR) {
++      setupAsarSupport();
++    }
+     _process.setupKillAndExit();
+     if (global.__coverage__)
+       NativeModule.require('internal/process/write-coverage').setup();
+diff --git a/node.gyp b/node.gyp
+index 7334c76942..5ec9ffdcbf 100644
+--- a/node.gyp
++++ b/node.gyp
+@@ -1,4 +1,7 @@
+ {
++  'includes': [
++    'config.gypi'
++  ],
+   'variables': {
+     'v8_use_snapshot%': 'false',
+     'v8_trace_maps%': 0,
+@@ -18,6 +21,7 @@
+     'node_shared_nghttp2%': 'false',
+     'node_use_openssl%': 'true',
+     'node_shared_openssl%': 'false',
++    'node_v8_path%': 'deps/v8',
+     'node_v8_options%': '',
+     'node_enable_v8_vtunejit%': 'false',
+     'node_core_target_name%': 'node',
+@@ -292,11 +296,20 @@
+         'node_js2c#host',
+       ],
+ 
++      'conditions': [
++        [ 'node_shared_nghttp2=="false"', {
++          'dependencies': [
++            'deps/nghttp2/nghttp2.gyp:nghttp2'
++          ]
++        }]
++      ],
++
+       'includes': [
+         'node.gypi'
+       ],
+ 
+       'include_dirs': [
++        '<(node_v8_path)/include',
+         'src',
+         '<(SHARED_INTERMEDIATE_DIR)' # for node_natives.h
+       ],
+@@ -591,6 +604,14 @@
+           ],
+         }],
+       ],
++
++      'link_settings': {
++        'ldflags': [
++          '-Wl,-rpath=\$$ORIGIN/',
++          # Make native module dynamic loading work.
++          '-rdynamic',
++        ],
++      },
+     },
+     {
+       'target_name': 'mkssldef',
+diff --git a/src/node_main.cc b/src/node_main.cc
+index 8907c47ae0..cf6c9b1f46 100644
+--- a/src/node_main.cc
++++ b/src/node_main.cc
+@@ -91,6 +91,7 @@ namespace node {
+   extern bool linux_at_secure;
+ }  // namespace node
+ 
++#include <stdlib.h>
+ int main(int argc, char *argv[]) {
+ #if defined(__POSIX__) && defined(NODE_SHARED_MODE)
+   // In node::PlatformInit(), we squash all signal handlers for non-shared lib
+@@ -121,6 +122,9 @@ int main(int argc, char *argv[]) {
+   // calls elsewhere in the program (e.g., any logging from V8.)
+   setvbuf(stdout, nullptr, _IONBF, 0);
+   setvbuf(stderr, nullptr, _IONBF, 0);
++#ifdef ELECTRON_NODE_BUILD_NO_ASAR
++  setenv("_ELECTRON_BUILD_NO_ASAR", "1", 1);
++#endif
+   return node::Start(argc, argv);
+ }
+ #endif
+diff --git a/tools/gyp_node.py b/tools/gyp_node.py
+index 043053c3da..04bb4f8cf7 100755
+--- a/tools/gyp_node.py
++++ b/tools/gyp_node.py
+@@ -13,6 +13,7 @@ import gyp
+ output_dir = os.path.join(os.path.abspath(node_root), 'out')
+ 
+ def run_gyp(args):
++  return
+   # GYP bug.
+   # On msvs it will crash if it gets an absolute path.
+   # On Mac/make it will crash if it doesn't get an absolute path.
+-- 
+2.21.0
+

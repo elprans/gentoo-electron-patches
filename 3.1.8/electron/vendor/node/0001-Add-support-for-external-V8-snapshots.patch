@@ -1,0 +1,117 @@
+From 45c7c420d5f7b3fa569c9ab51df6987aea6c3f97 Mon Sep 17 00:00:00 2001
+From: Elvis Pranskevichus <elvis@magic.io>
+Date: Sat, 11 Jun 2016 18:27:19 -0400
+Subject: [PATCH 1/2] Add support for external V8 snapshots
+
+---
+ src/node.cc | 87 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 87 insertions(+)
+
+diff --git a/src/node.cc b/src/node.cc
+index c87840c95c..99ab0cc269 100644
+--- a/src/node.cc
++++ b/src/node.cc
+@@ -4359,6 +4359,91 @@ Isolate* NewIsolate(ArrayBufferAllocator* allocator) {
+   return isolate;
+ }
+ 
++#include <sys/mman.h>
++
++const char kProcSelfExe[] = "/proc/self/exe";
++const char kNativesFileName[] = "natives_blob.bin";
++const char kSnapshotFileName[] = "snapshot_blob.bin";
++const char *g_mapped_natives = nullptr;
++const char *g_mapped_snapshot = nullptr;
++
++static char* SnapshotPath(const char* filename) {
++  char *path;
++  char *dir;
++  ssize_t r;
++
++  path = reinterpret_cast<char*>(malloc(4096 + strlen(filename) + 2));
++  if (path == nullptr) {
++    fprintf(stderr, "out of memory\n");
++    ABORT();
++  }
++
++  r = readlink(kProcSelfExe, path, 4096 + 1);
++  if (r == -1) {
++    perror("could not determine node executable directory");
++    ABORT();
++  }
++
++  path[r] = '\0';
++
++  dir = strrchr(path, '/');
++
++  strcpy(dir + 1, filename);
++
++  return path;
++}
++
++static void LoadV8Snapshot(const char* name, const char** addr, size_t *size) {
++  char *path = SnapshotPath(name);
++  int fd;
++  struct stat sb;
++
++  fd = open(path, O_RDONLY);
++
++  if (fd == -1) {
++    fprintf(stderr, "could not open snapshot file '%s': %s\n",
++            path, strerror(errno));
++    ABORT();
++  }
++
++  if (fstat(fd, &sb) == -1) {
++    fprintf(stderr, "could not stat snapshot file '%s': %s\n",
++            path, strerror(errno));
++    ABORT();
++  }
++
++  *size = sb.st_size;
++
++  *addr = reinterpret_cast<const char*>(
++            mmap(NULL, sb.st_size, PROT_READ, MAP_PRIVATE, fd, 0));
++  if (*addr == MAP_FAILED) {
++    fprintf(stderr, "could not read snapshot file '%s': %s\n",
++            path, strerror(errno));
++    ABORT();
++  }
++
++  close(fd);
++  free(path);
++}
++
++static void LoadV8Snapshots() {
++  size_t natives_size;
++  size_t snapshot_size;
++
++  LoadV8Snapshot(kNativesFileName, &g_mapped_natives, &natives_size);
++  LoadV8Snapshot(kSnapshotFileName, &g_mapped_snapshot, &snapshot_size);
++
++  v8::StartupData natives;
++  natives.data = g_mapped_natives;
++  natives.raw_size = natives_size;
++  V8::SetNativesDataBlob(&natives);
++
++  v8::StartupData snapshot;
++  snapshot.data = g_mapped_snapshot;
++  snapshot.raw_size = snapshot_size;
++  V8::SetSnapshotDataBlob(&snapshot);
++}
++
+ inline int Start(uv_loop_t* event_loop,
+                  int argc, const char* const* argv,
+                  int exec_argc, const char* const* exec_argv) {
+@@ -4420,6 +4505,8 @@ int Start(int argc, char** argv) {
+   const char** exec_argv;
+   Init(&argc, const_cast<const char**>(argv), &exec_argc, &exec_argv);
+ 
++  LoadV8Snapshots();
++
+ #if HAVE_OPENSSL
+   {
+     std::string extra_ca_certs;
+-- 
+2.21.0
+
