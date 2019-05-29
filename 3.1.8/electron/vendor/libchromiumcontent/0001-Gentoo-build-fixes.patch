@@ -1,4 +1,4 @@
-From 360a01af6fbbd6acbe90684aae2d47285f4096bd Mon Sep 17 00:00:00 2001
+From 30d1ea424b5a3baebf0a80bd80653e49d198d73b Mon Sep 17 00:00:00 2001
 From: Elvis Pranskevichus <elvis@magic.io>
 Date: Fri, 28 Apr 2017 17:22:38 -0400
 Subject: [PATCH] Gentoo build fixes
@@ -9,8 +9,9 @@ Subject: [PATCH] Gentoo build fixes
  script/create-dist            | 22 ++++++++++++----------
  script/lib/config.py          |  2 +-
  script/lib/ninja.py           |  2 +-
- script/lib/patches.py         |  4 ++++
- 6 files changed, 23 insertions(+), 30 deletions(-)
+ script/lib/patches.py         |  6 +++++-
+ script/run_tests              |  2 +-
+ 7 files changed, 25 insertions(+), 32 deletions(-)
 
 diff --git a/chromiumcontent/BUILD.gn b/chromiumcontent/BUILD.gn
 index 70ad2b2..fd833a0 100644
@@ -201,9 +202,18 @@ index f9a185f..7eeba46 100644
    args = [ninja_binary,
            '-C', directory
 diff --git a/script/lib/patches.py b/script/lib/patches.py
-index 87a3233..07c7b95 100644
+index 87a3233..59bcb2f 100644
 --- a/script/lib/patches.py
 +++ b/script/lib/patches.py
+@@ -68,7 +68,7 @@ class PatchesConfig:
+     if os.path.isfile(self.path):
+       with open(self.path, 'r') as stream:
+         try:
+-          contents = yaml.load(stream)
++          contents = yaml.load(stream, Loader=yaml.SafeLoader)
+         except yaml.YAMLError as e:
+           print(e)
+ 
 @@ -86,6 +86,10 @@ class PatchesConfig:
        return None
  
@@ -215,6 +225,19 @@ index 87a3233..07c7b95 100644
      if sys.platform == 'win32':
        repo_path = repo_path.replace('/', '\\')
  
+diff --git a/script/run_tests b/script/run_tests
+index be87c1c..d3369bd 100755
+--- a/script/run_tests
++++ b/script/run_tests
+@@ -44,7 +44,7 @@ def RunTests(binary_tests, generate_report):
+     disabled_tests_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'disabled-tests.yaml')
+     disabled_tests = {}
+     if os.path.isfile(disabled_tests_path):
+-      disabled_tests = yaml.load(file(disabled_tests_path, 'r'))
++      disabled_tests = yaml.load(file(disabled_tests_path, 'r'), loader=yaml.SafeLoader)
+     else:
+       print 'No disabled-tests.yaml file found. Not excluding any tests.'
+     results = []
 -- 
 2.21.0
 
