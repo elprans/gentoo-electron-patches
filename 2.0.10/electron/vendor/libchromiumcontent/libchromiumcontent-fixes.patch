@@ -1,4 +1,4 @@
-From 3239d38cd1c3d7e5a8362eff372aca7c861d2af0 Mon Sep 17 00:00:00 2001
+From 5db60c30703c33919d4961c4e1ad3c0d7c434589 Mon Sep 17 00:00:00 2001
 From: Elvis Pranskevichus <elvis@magic.io>
 Date: Fri, 28 Apr 2017 17:22:38 -0400
 Subject: [PATCH] Gentoo build fixes
@@ -6,9 +6,9 @@ Subject: [PATCH] Gentoo build fixes
 ---
  chromiumcontent/BUILD.gn      | 24 ++----------------------
  chromiumcontent/build_libs.py |  5 ++---
- script/create-dist            | 18 +++++++++---------
+ script/create-dist            | 24 ++++++++++++------------
  script/lib/config.py          |  2 +-
- 4 files changed, 14 insertions(+), 35 deletions(-)
+ 4 files changed, 17 insertions(+), 38 deletions(-)
 
 diff --git a/chromiumcontent/BUILD.gn b/chromiumcontent/BUILD.gn
 index 9871197..04ccca9 100644
@@ -87,7 +87,7 @@ index 15a871c..1341a8a 100644
 -
 -open(args.stamp, 'w')
 diff --git a/script/create-dist b/script/create-dist
-index 593ac3b..fcb8327 100755
+index 593ac3b..50eac87 100755
 --- a/script/create-dist
 +++ b/script/create-dist
 @@ -34,7 +34,7 @@ MIPS64EL_GCC = 'gcc-4.8.3-d197-n64-loongson'
@@ -157,6 +157,24 @@ index 593ac3b..fcb8327 100755
    if component == 'shared_library':
      binaries += BINARIES_SHARED_LIBRARY[TARGET_PLATFORM]
    for binary in binaries:
+@@ -533,14 +532,14 @@ def copy_binaries(target_arch, component, create_debug_archive,
+     if TARGET_PLATFORM == "win32":
+       binaries = [ 'chromedriver.exe', 'mksnapshot.exe' ]
+     elif target_arch == 'arm':
+-      binaries = [ 'chromedriver', 'clang_x86_v8_arm/mksnapshot' ]
++      binaries = [ 'chromedriver', 'mksnapshot' ]
+     elif target_arch == 'arm64':
+-      binaries = [ 'chromedriver', 'clang_x64_v8_arm64/mksnapshot' ]
++      binaries = [ 'chromedriver', 'mksnapshot' ]
+     elif target_arch == 'mips64el':
+       if IS_MIPS64EL_HOST:
+         binaries = [ 'chromedriver', 'mksnapshot' ]
+       else:
+-        binaries = [ 'chromedriver', 'clang_x64_v8_mips64el/mksnapshot' ]
++        binaries = [ 'chromedriver', 'mksnapshot' ]
+     else:
+       binaries = [ 'chromedriver', 'mksnapshot' ]
+ 
 @@ -591,6 +590,7 @@ def copy_locales(target_arch, component, ninja):
      new_name = re.sub('content_strings_', '', filename)
      ninja.copy(src_file, os.path.join(target_dir, new_name), False)
@@ -192,5 +210,5 @@ index 3455161..195b2a1 100644
 -  return os.path.join(source_root, 'src', 'out-' + target_arch, component)
 +  return os.environ.get('CHROMIUM_BUILD_DIR')
 -- 
-2.16.4
+2.21.0
 
