@@ -1,0 +1,19 @@
+diff --git a/components/viz/host/host_display_client.h b/components/viz/host/host_display_client.h
+index 8c6ec95..9080bea 100644
+--- a/components/viz/host/host_display_client.h
++++ b/components/viz/host/host_display_client.h
+@@ -13,7 +13,14 @@
+ #include "build/build_config.h"
+ #include "components/viz/host/viz_host_export.h"
+ #include "mojo/public/cpp/bindings/binding.h"
++#ifdef Success
++#undef Success
++#define __X11_SUCCESS
++#endif
+ #include "services/viz/privileged/interfaces/compositing/display_private.mojom.h"
++#ifdef __X11_SUCCESS
++#define Success 0
++#endif
+ #include "ui/gfx/native_widget_types.h"
+
+ namespace viz {
