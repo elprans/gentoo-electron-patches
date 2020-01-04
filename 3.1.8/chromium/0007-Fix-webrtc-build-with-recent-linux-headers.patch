@@ -1,0 +1,27 @@
+From 65fc955db5516b304746771081ffd394f598f3c7 Mon Sep 17 00:00:00 2001
+From: Elvis Pranskevichus <elvis@magic.io>
+Date: Thu, 2 Jan 2020 13:12:46 -0500
+Subject: [PATCH 7/7] Fix webrtc build with recent linux-headers
+
+---
+ third_party/webrtc/rtc_base/physicalsocketserver.cc | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/third_party/webrtc/rtc_base/physicalsocketserver.cc b/third_party/webrtc/rtc_base/physicalsocketserver.cc
+index 0d5fc52524..a3710f50ec 100644
+--- a/third_party/webrtc/rtc_base/physicalsocketserver.cc
++++ b/third_party/webrtc/rtc_base/physicalsocketserver.cc
+@@ -54,6 +54,10 @@
+ #include "rtc_base/timeutils.h"
+ #include "rtc_base/win32socketinit.h"
+ 
++#if defined(WEBRTC_LINUX)
++#include <linux/sockios.h>
++#endif
++
+ #if defined(WEBRTC_WIN)
+ #define LAST_SYSTEM_ERROR (::GetLastError())
+ #elif defined(__native_client__) && __native_client__
+-- 
+2.24.1
+

@@ -1,0 +1,25 @@
+From 5a70215a6c77258c5e122d55e1255dbb4c9c43cb Mon Sep 17 00:00:00 2001
+From: Elvis Pranskevichus <elvis@magic.io>
+Date: Fri, 3 Jan 2020 19:58:13 -0500
+Subject: [PATCH 9/9] Fix compilation with ICU 65
+
+---
+ third_party/WebKit/Source/core/dom/Document.cpp | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/third_party/WebKit/Source/core/dom/Document.cpp b/third_party/WebKit/Source/core/dom/Document.cpp
+index dab2717d62..849328c1fc 100644
+--- a/third_party/WebKit/Source/core/dom/Document.cpp
++++ b/third_party/WebKit/Source/core/dom/Document.cpp
+@@ -5365,7 +5365,7 @@ static ParseQualifiedNameResult ParseQualifiedNameInternal(
+ 
+   for (unsigned i = 0; i < length;) {
+     UChar32 c;
+-    U16_NEXT(characters, i, length, c)
++    U16_NEXT(characters, i, length, c);
+     if (c == ':') {
+       if (saw_colon)
+         return ParseQualifiedNameResult(kQNMultipleColons);
+-- 
+2.24.1
+

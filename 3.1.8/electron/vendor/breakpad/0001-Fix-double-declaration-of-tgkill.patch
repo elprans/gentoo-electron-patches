@@ -1,0 +1,41 @@
+From eead3b6412b0e9d11a3ecf4af8132417464b5c6e Mon Sep 17 00:00:00 2001
+From: Elvis Pranskevichus <elvis@magic.io>
+Date: Fri, 3 Jan 2020 21:30:27 -0500
+Subject: [PATCH] Fix double declaration of tgkill
+
+Recent versions of glibc declare tgkill, so it will conflict with the
+static declaration here.  Replace with sys_tgkill from the linux syscall
+support library.
+---
+ src/client/linux/handler/exception_handler.cc | 8 +-------
+ 1 file changed, 1 insertion(+), 7 deletions(-)
+
+diff --git a/src/client/linux/handler/exception_handler.cc b/src/client/linux/handler/exception_handler.cc
+index b63f973b..b04a213d 100644
+--- a/src/client/linux/handler/exception_handler.cc
++++ b/src/client/linux/handler/exception_handler.cc
+@@ -105,12 +105,6 @@
+ #define PR_SET_PTRACER 0x59616d61
+ #endif
+ 
+-// A wrapper for the tgkill syscall: send a signal to a specific thread.
+-static int tgkill(pid_t tgid, pid_t tid, int sig) {
+-  return syscall(__NR_tgkill, tgid, tid, sig);
+-  return 0;
+-}
+-
+ namespace google_breakpad {
+ 
+ namespace {
+@@ -387,7 +381,7 @@ void ExceptionHandler::SignalHandler(int sig, siginfo_t* info, void* uc) {
+     // In order to retrigger it, we have to queue a new signal by calling
+     // kill() ourselves.  The special case (si_pid == 0 && sig == SIGABRT) is
+     // due to the kernel sending a SIGABRT from a user request via SysRQ.
+-    if (tgkill(getpid(), syscall(__NR_gettid), sig) < 0) {
++    if (sys_tgkill(getpid(), syscall(__NR_gettid), sig) < 0) {
+       // If we failed to kill ourselves (e.g. because a sandbox disallows us
+       // to do so), we instead resort to terminating our process. This will
+       // result in an incorrect exit code.
+-- 
+2.24.1
+
