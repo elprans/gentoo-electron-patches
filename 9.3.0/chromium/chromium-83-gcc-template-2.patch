@@ -1,0 +1,16 @@
+diff --git a/third_party/blink/renderer/core/layout/ng/ng_physical_container_fragment.cc b/third_party/blink/renderer/core/layout/ng/ng_physical_container_fragment.cc
+index 82f5761..db63061 100644
+--- a/third_party/blink/renderer/core/layout/ng/ng_physical_container_fragment.cc
++++ b/third_party/blink/renderer/core/layout/ng/ng_physical_container_fragment.cc
+@@ -115,11 +115,6 @@ void NGPhysicalContainerFragment::AddOutlineRectsForNormalChildren(
+       // Don't add |Children()|. If |this| has |NGFragmentItems|, children are
+       // either line box, which we already handled in items, or OOF, which we
+       // should ignore.
+-      DCHECK(std::all_of(PostLayoutChildren().begin(),
+-                         PostLayoutChildren().end(), [](const NGLink& child) {
+-                           return child->IsLineBox() ||
+-                                  child->IsOutOfFlowPositioned();
+-                         }));
+       return;
+     }
+   }
