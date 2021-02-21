@@ -1,0 +1,12 @@
+diff --git a/build/linux/unbundle/icu.gn b/build/linux/unbundle/icu.gn
+index e77bc43..b984d89 100644
+--- a/build/linux/unbundle/icu.gn
++++ b/build/linux/unbundle/icu.gn
+@@ -35,6 +35,7 @@ config("icu_config") {
+     # to define U_IMPORT to have the same value as U_EXPORT. For more details,
+     # please see: https://crbug.com/822820
+     "U_IMPORT=U_EXPORT",
++    "U_DEFINE_FALSE_AND_TRUE=1",
+   ]
+ }
+ 
