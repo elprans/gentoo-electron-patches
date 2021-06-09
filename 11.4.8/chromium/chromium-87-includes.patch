@@ -1,0 +1,50 @@
+From 952dc93e7a9005ef39b59ee5ce5af4bdff68269c Mon Sep 17 00:00:00 2001
+From: Elvis Pranskevichus <elvis@magic.io>
+Date: Sun, 6 Jun 2021 23:22:41 -0700
+Subject: [PATCH] includes
+
+---
+ .../abseil-cpp/absl/synchronization/internal/graphcycles.cc      | 1 +
+ .../perfetto/src/trace_processor/containers/string_pool.h        | 1 +
+ net/dns/dns_server_iterator.h                                    | 2 ++
+ 3 files changed, 4 insertions(+)
+
+diff --git a/third_party/abseil-cpp/absl/synchronization/internal/graphcycles.cc b/third_party/abseil-cpp/absl/synchronization/internal/graphcycles.cc
+index 19f9aab..27fec21 100644
+--- a/third_party/abseil-cpp/absl/synchronization/internal/graphcycles.cc
++++ b/third_party/abseil-cpp/absl/synchronization/internal/graphcycles.cc
+@@ -37,6 +37,7 @@
+
+ #include <algorithm>
+ #include <array>
++#include <limits>
+ #include "absl/base/internal/hide_ptr.h"
+ #include "absl/base/internal/raw_logging.h"
+ #include "absl/base/internal/spinlock.h"
+diff --git a/third_party/perfetto/src/trace_processor/containers/string_pool.h b/third_party/perfetto/src/trace_processor/containers/string_pool.h
+index 11ae91c..558ff00 100644
+--- a/third_party/perfetto/src/trace_processor/containers/string_pool.h
++++ b/third_party/perfetto/src/trace_processor/containers/string_pool.h
+@@ -20,6 +20,7 @@
+ #include <stddef.h>
+ #include <stdint.h>
+
++#include <limits>
+ #include <unordered_map>
+ #include <vector>
+
+diff --git a/net/dns/dns_server_iterator.h b/net/dns/dns_server_iterator.h
+index 97c42f7..bc960b9 100644
+--- a/net/dns/dns_server_iterator.h
++++ b/net/dns/dns_server_iterator.h
+@@ -5,6 +5,8 @@
+ #ifndef NET_DNS_DNS_SERVER_ITERATOR_H_
+ #define NET_DNS_DNS_SERVER_ITERATOR_H_
+
++#include <stddef.h>
++
+ #include <vector>
+
+ #include "net/base/net_export.h
+--
+2.31.1
